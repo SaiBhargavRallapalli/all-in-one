@@ -164,4 +164,46 @@ describe("POST /api/proxy", () => {
     const json = await res.json();
     expect(json.error).toMatch(/rate limit/i);
   });
+
+  it("blocks redirects that land on private addresses", async () => {
+    vi.resetModules();
+    const { POST } = await import("./route");
+
+    vi.mocked(fetch).mockResolvedValueOnce({
+      status: 302,
+      statusText: "Found",
+      ok: false,
+      headers: new Headers({ location: "http://169.254.169.254/latest/meta-data/" }),
+      arrayBuffer: vi.fn().mockResolvedValue(new ArrayBuffer(0)),
+      url: "https://evil.example.com/redirect",
+      redirected: false,
+    } as unknown as Response);
+
+    const res = await POST(
+      makeRequest({ url: "https://evil.example.com/redirect", method: "GET" }, "9.9.9.11"),
+    );
+    expect(res.status).toBe(403);
+    const json = await res.json();
+    expect(json.error).toMatch(/private|internal/i);
+    expect(vi.mocked(fetch).mock.calls.length).toBe(1);
+  });
+
+  it("uses redirect: manual so hops can be re-validated", async () => {
+    const { POST } = await import("./route");
+    vi.mocked(fetch).mockResolvedValue(mockFetchResponse({ body: '{"ok":true}' }));
+
+    await POST(makeRequest({ url: "https://api.example.com/data", method: "GET" }, "9.9.9.12"));
+
+    const [, fetchInit] = vi.mocked(fetch).mock.calls[0];
+    expect((fetchInit as RequestInit).redirect).toBe("manual");
+  });
+
+  it("rejects ftp URLs before fetch", async () => {
+    const { POST } = await import("./route");
+    const res = await POST(
+      makeRequest({ url: "ftp://example.com/file", method: "GET" }, "9.9.9.13"),
+    );
+    expect(res.status).toBe(400);
+    expect(vi.mocked(fetch)).not.toHaveBeenCalled();
+  });
 });

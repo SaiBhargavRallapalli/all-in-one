@@ -55,18 +55,27 @@ Third parties loaded in the browser (scripts, frames, beacons) are a **separate 
 
 **Controls (current):**
 
+- Rejects **non-http(s)** schemes (`ftp:`, `file:`, etc.).
 - Rejects **loopback** hostnames (`localhost`, `127.0.0.1`, `::1`, etc.).
-- Rejects **RFC1918 / link-local / ULA-style** IPv4 patterns and common IPv6 local patterns (heuristic, not a full IP parser).
+- Rejects **RFC1918 / link-local / ULA-style** IPv4 patterns, IPv4-mapped IPv6 (`::ffff:…`), integer/short IPv4 forms, and common IPv6 local patterns (heuristic, not a full IP parser).
 - **30s** timeout, **5 MB** response cap (oversize body replaced with message).
-- `redirect: "follow"` — redirects are followed server-side; `finalUrl` returned to client.
+- **Manual redirect following** (max 5 hops) — each `Location` is re-parsed and re-checked with the same host/scheme rules before the next request.
+- Strips hop-by-hop / dangerous request headers (`Host`, `Transfer-Encoding`, `Cookie`, …) before forwarding.
+- Origin allowlist for browser requests; per-IP rate limit (in-memory per instance).
 
 **Residual risks:**
 
-- **SSRF to “public” internal** — If a customer’s “public” hostname resolves to internal-only from our edge, DNS rebinding or split-horizon DNS could theoretically reach more than intended. Mitigation depth: add optional **allowlist mode** for enterprise builds; log hostname + status (PII-aware); consider blocking **metadata IP** ranges (cloud metadata) explicitly.
-- **Abuse as open relay** — Anyone can POST our origin to fetch arbitrary URLs. Mitigation: **rate limiting** (Vercel / edge / KV), CAPTCHA or auth for heavy use, monitoring egress anomalies.
+- **SSRF to “public” internal** — If a customer’s “public” hostname resolves to internal-only from our edge, DNS rebinding or split-horizon DNS could theoretically reach more than intended. Mitigation depth: optional **allowlist mode** for enterprise builds; DNS resolve + block private results; log hostname + status (PII-aware).
+- **Abuse as open relay** — Anyone can POST our origin (null Origin) to fetch arbitrary URLs. Mitigation: tighten Origin in production, edge/KV rate limits, CAPTCHA or auth for heavy use, monitoring egress anomalies.
 - **Response stored/logged** — Ensure no logging of full bodies in production analytics.
 
-### 4.2 Other server routes
+### 4.2 `POST /api/convert-notebook`
+
+**Purpose:** Convert uploaded `.ipynb` notebooks to PDF (Chromium / optional jupyter nbconvert).
+
+**Controls (current):** Origin allowlist (same pattern as proxy), 5 req/min per IP, 50 MB upload cap, sanitized `Content-Disposition` filename.
+
+### 4.3 Other server routes
 
 Inventory should stay minimal. Any new `app/api/**` route must be listed here with purpose and auth model.
 

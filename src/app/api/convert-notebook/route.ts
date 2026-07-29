@@ -11,6 +11,50 @@ const execAsync = promisify(exec);
 
 const MAX_FILE_BYTES = 50 * 1024 * 1024;
 
+const RATE_WINDOW_MS = 60_000;
+const RATE_LIMIT = 5;
+const rateLimitMap = new Map<string, number[]>();
+
+const ALLOWED_ORIGIN_RE =
+  /^https:\/\/(www\.devbench\.co\.in|devbench\.co\.in|[a-z0-9-]+\.devbench\.co\.in)$|^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
+
+function isAllowedOrigin(origin: string | null): boolean {
+  if (origin === null) return true;
+  return ALLOWED_ORIGIN_RE.test(origin);
+}
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const timestamps = (rateLimitMap.get(ip) ?? []).filter(
+    (t) => now - t < RATE_WINDOW_MS,
+  );
+  if (timestamps.length >= RATE_LIMIT) return true;
+  timestamps.push(now);
+  rateLimitMap.set(ip, timestamps);
+  return false;
+}
+
+function clientIp(req: NextRequest): string {
+  const vercel = req.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim();
+  if (vercel) return vercel;
+  return (
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
+    req.headers.get("x-real-ip") ??
+    "unknown"
+  );
+}
+
+/** Safe Content-Disposition filename (no quotes/CRLF/path separators). */
+export function sanitizeDownloadFilename(name: string, fallback = "notebook.pdf"): string {
+  const base = name.replace(/\.ipynb$/i, ".pdf");
+  const cleaned = base
+    .replace(/[\r\n"\\]/g, "")
+    .replace(/[/\\?%*:|<>]/g, "_")
+    .trim();
+  if (!cleaned || cleaned === ".pdf") return fallback;
+  return cleaned.slice(0, 180);
+}
+
 async function getBrowser() {
   // On Vercel / serverless: use the bundled compressed Chromium.
   // On a Linux server with a system Chromium: set CHROMIUM_PATH env var.
@@ -34,6 +78,19 @@ async function getBrowser() {
 }
 
 export async function POST(req: NextRequest) {
+  const origin = req.headers.get("origin");
+  if (!isAllowedOrigin(origin)) {
+    return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+  }
+
+  const ip = clientIp(req);
+  if (isRateLimited(ip)) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded. Max 5 conversions per minute." },
+      { status: 429 },
+    );
+  }
+
   const id = randomBytes(8).toString("hex");
   const base = join(tmpdir(), `nb-${id}`);
   const ipynbPath = `${base}.ipynb`;
@@ -75,7 +132,7 @@ export async function POST(req: NextRequest) {
       html = await readFile(htmlPath, "utf-8");
     } else {
       const nb = JSON.parse(ipynbBuffer.toString("utf-8")) as Notebook;
-      const title = file.name.replace(/\.ipynb$/i, "");
+      const title = sanitizeDownloadFilename(file.name, "notebook.pdf").replace(/\.pdf$/i, "");
       html = notebookToHtml(nb, title, { includeCodeCells: true, includeOutputs: true });
     }
 
@@ -95,7 +152,7 @@ export async function POST(req: NextRequest) {
       await browser.close();
     }
 
-    const outName = file.name.replace(/\.ipynb$/i, ".pdf");
+    const outName = sanitizeDownloadFilename(file.name);
     return new NextResponse(pdfBytes as unknown as BodyInit, {
       headers: {
         "Content-Type": "application/pdf",

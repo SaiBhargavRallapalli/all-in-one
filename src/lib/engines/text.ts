@@ -184,6 +184,24 @@ export function reverseString(input: string): Result {
   return [...input].reverse().join("");
 }
 
+function escapeHtmlAttr(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+/** Allow only safe link schemes and reject attribute-breakout characters. */
+function sanitizeMarkdownHref(href: string): string {
+  const trimmed = href.trim();
+  if (!/^(https?:\/\/|\/|#|mailto:)/i.test(trimmed)) return "#";
+  if (/["'<>`\s]/.test(trimmed)) return "#";
+  if (/^(javascript|data|vbscript):/i.test(trimmed)) return "#";
+  return trimmed;
+}
+
 export function markdownToHtml(input: string): Result {
   // Escape HTML entities first to prevent XSS injection via raw HTML tags
   let html = input
@@ -197,8 +215,8 @@ export function markdownToHtml(input: string): Result {
   html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
   html = html.replace(/`(.+?)`/g, "<code>$1</code>");
   html = html.replace(/\[(.+?)\]\((.+?)\)/g, (_, text, href) => {
-    const safeHref = /^(https?:\/\/|\/|#|mailto:)/i.test(href) ? href : "#";
-    return `<a href="${safeHref}" target="_blank" rel="noopener noreferrer">${text}</a>`;
+    const safeHref = sanitizeMarkdownHref(String(href));
+    return `<a href="${escapeHtmlAttr(safeHref)}" target="_blank" rel="noopener noreferrer">${text}</a>`;
   });
   html = html.replace(/^- (.+)$/gm, "<li>$1</li>");
   html = html.replace(/(<li>.*<\/li>\n?)+/g, (m) => `<ul>\n${m}</ul>\n`);

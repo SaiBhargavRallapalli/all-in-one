@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ProxyRequestSchema, isBlockedHost } from "./validation";
+import {
+  ProxyRequestSchema,
+  isAllowedProxyUrl,
+  sanitizeProxyHeaders,
+  MAX_PROXY_REDIRECTS,
+} from "./validation";
 import { logger } from "@/lib/logger";
 
 const MAX_BODY_SIZE = 5 * 1024 * 1024; // 5 MB
@@ -33,11 +38,78 @@ function isAllowedOrigin(origin: string | null): boolean {
   return ALLOWED_ORIGIN_RE.test(origin);
 }
 
-export async function POST(req: NextRequest) {
-  const ip =
+function clientIp(req: NextRequest): string {
+  // Prefer platform-trusted hop when present (Vercel); fall back to XFF last.
+  const vercel = req.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim();
+  if (vercel) return vercel;
+  return (
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     req.headers.get("x-real-ip") ??
-    "unknown";
+    "unknown"
+  );
+}
+
+class ProxyBlockedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ProxyBlockedError";
+  }
+}
+
+/**
+ * Follow redirects manually so each hop is re-validated against the private-IP
+ * / scheme allowlist (undici `redirect: "follow"` would skip those checks).
+ */
+async function fetchWithSafeRedirects(
+  initialUrl: string,
+  init: RequestInit,
+  signal: AbortSignal,
+): Promise<Response> {
+  let currentUrl = initialUrl;
+  let method = (init.method ?? "GET").toUpperCase();
+  let body = init.body;
+  const headers = init.headers;
+
+  for (let hop = 0; hop <= MAX_PROXY_REDIRECTS; hop++) {
+    const allowed = isAllowedProxyUrl(currentUrl);
+    if (!allowed.ok) {
+      throw new ProxyBlockedError(allowed.error);
+    }
+
+    const response = await fetch(currentUrl, {
+      method,
+      headers,
+      body: method === "GET" || method === "HEAD" ? undefined : body,
+      signal,
+      redirect: "manual",
+    });
+
+    if (response.status < 300 || response.status >= 400) {
+      return response;
+    }
+
+    const location = response.headers.get("location");
+    if (!location) {
+      return response;
+    }
+
+    // Consume body so the connection can be reused / closed cleanly.
+    await response.arrayBuffer().catch(() => undefined);
+
+    currentUrl = new URL(location, currentUrl).href;
+
+    // Match browser/fetch semantics: 301/302/303 drop body and become GET.
+    if ([301, 302, 303].includes(response.status) && method !== "GET" && method !== "HEAD") {
+      method = "GET";
+      body = undefined;
+    }
+  }
+
+  throw new ProxyBlockedError("Too many redirects.");
+}
+
+export async function POST(req: NextRequest) {
+  const ip = clientIp(req);
 
   const origin = req.headers.get("origin");
   if (!isAllowedOrigin(origin)) {
@@ -66,18 +138,9 @@ export async function POST(req: NextRequest) {
 
   const { url, method, headers, payload } = parsed.data;
 
-  let parsedUrl: URL;
-  try {
-    parsedUrl = new URL(url);
-  } catch {
-    return NextResponse.json({ error: "Invalid URL." }, { status: 400 });
-  }
-
-  if (isBlockedHost(parsedUrl.hostname)) {
-    return NextResponse.json(
-      { error: "Requests to private/internal addresses are not allowed." },
-      { status: 403 },
-    );
+  const initial = isAllowedProxyUrl(url);
+  if (!initial.ok) {
+    return NextResponse.json({ error: initial.error }, { status: 403 });
   }
 
   const controller = new AbortController();
@@ -88,18 +151,25 @@ export async function POST(req: NextRequest) {
 
     const fetchOpts: RequestInit = {
       method: method.toUpperCase(),
-      headers: headers ?? {},
+      headers: sanitizeProxyHeaders(headers),
       signal: controller.signal,
-      redirect: "follow",
     };
 
     if (payload && !["GET", "HEAD"].includes(method.toUpperCase())) {
       fetchOpts.body = payload;
     }
 
-    const response = await fetch(url, fetchOpts);
+    const response = await fetchWithSafeRedirects(url, fetchOpts, controller.signal);
     const elapsed = Math.round(performance.now() - startTime);
     clearTimeout(timer);
+
+    // Re-check final URL after any redirect chain (defense in depth).
+    if (response.url) {
+      const finalCheck = isAllowedProxyUrl(response.url);
+      if (!finalCheck.ok) {
+        return NextResponse.json({ error: finalCheck.error }, { status: 403 });
+      }
+    }
 
     const responseHeaders: Record<string, string> = {};
     response.headers.forEach((v, k) => {
@@ -124,11 +194,14 @@ export async function POST(req: NextRequest) {
       contentType,
       time: elapsed,
       size: buffer.byteLength,
-      redirected: response.redirected,
-      finalUrl: response.url,
+      redirected: response.url !== "" && response.url !== url,
+      finalUrl: response.url || url,
     });
   } catch (err) {
     clearTimeout(timer);
+    if (err instanceof ProxyBlockedError) {
+      return NextResponse.json({ error: err.message }, { status: 403 });
+    }
     const msg = err instanceof Error ? err.message : "Unknown error";
     if (msg.includes("abort")) {
       logger.warn("/api/proxy", "Request timed out", { url, method });

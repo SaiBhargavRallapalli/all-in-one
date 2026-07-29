@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   isPrivateAddress,
   isBlockedHost,
+  isAllowedProxyUrl,
+  sanitizeProxyHeaders,
   ProxyRequestSchema,
   MAX_URL_LENGTH,
   MAX_HEADER_VALUE_LENGTH,
@@ -19,6 +21,13 @@ describe("isPrivateAddress", () => {
   it("blocks ::1", () => expect(isPrivateAddress("::1")).toBe(true));
   it("blocks fc00:: (ULA)", () => expect(isPrivateAddress("fc00::1")).toBe(true));
   it("blocks fe80:: (link-local)", () => expect(isPrivateAddress("fe80::1")).toBe(true));
+  it("blocks IPv4-mapped loopback", () =>
+    expect(isPrivateAddress("::ffff:127.0.0.1")).toBe(true));
+  it("blocks IPv4-mapped hex loopback", () =>
+    expect(isPrivateAddress("::ffff:7f00:1")).toBe(true));
+  it("blocks decimal/integer IPv4 forms", () =>
+    expect(isPrivateAddress("2130706433")).toBe(true));
+  it("blocks short IPv4 forms", () => expect(isPrivateAddress("127.1")).toBe(true));
   it("allows public IPv4", () => expect(isPrivateAddress("8.8.8.8")).toBe(false));
   it("allows public IPv6", () => expect(isPrivateAddress("2001:db8::1")).toBe(false));
 });
@@ -32,6 +41,38 @@ describe("isBlockedHost", () => {
     expect(isBlockedHost("192.168.0.1")).toBe(true));
   it("allows public domain", () => expect(isBlockedHost("api.example.com")).toBe(false));
   it("allows public IP", () => expect(isBlockedHost("8.8.8.8")).toBe(false));
+});
+
+describe("isAllowedProxyUrl", () => {
+  it("accepts https public URLs", () => {
+    expect(isAllowedProxyUrl("https://api.example.com/x").ok).toBe(true);
+  });
+
+  it("rejects ftp", () => {
+    const r = isAllowedProxyUrl("ftp://example.com/file");
+    expect(r.ok).toBe(false);
+  });
+
+  it("rejects private hosts", () => {
+    const r = isAllowedProxyUrl("http://169.254.169.254/latest/meta-data/");
+    expect(r.ok).toBe(false);
+  });
+});
+
+describe("sanitizeProxyHeaders", () => {
+  it("strips hop-by-hop and Host headers", () => {
+    expect(
+      sanitizeProxyHeaders({
+        Host: "evil.internal",
+        "Transfer-Encoding": "chunked",
+        Authorization: "Bearer t",
+        "X-Custom": "ok",
+      }),
+    ).toEqual({
+      Authorization: "Bearer t",
+      "X-Custom": "ok",
+    });
+  });
 });
 
 describe("ProxyRequestSchema", () => {
@@ -90,9 +131,7 @@ describe("ProxyRequestSchema", () => {
 
   it("rejects non-http/https url", () => {
     const r = ProxyRequestSchema.safeParse({ ...valid, url: "ftp://example.com/file" });
-    // URL parses fine but is technically an external URL — schema allows it if URL is valid
-    // This test documents current behavior
-    expect(r.success).toBe(true);
+    expect(r.success).toBe(false);
   });
 
   it("rejects malformed url string", () => {

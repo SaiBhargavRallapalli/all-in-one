@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { caseConvert, slugify, wordCount, sortLines, findReplace, normalizeWhitespace, reverseString } from "./text";
+import {
+  caseConvert,
+  slugify,
+  wordCount,
+  sortLines,
+  findReplace,
+  normalizeWhitespace,
+  reverseString,
+  markdownToHtml,
+} from "./text";
 
 function str(r: unknown): string {
   if (typeof r === "string") return r;
@@ -135,5 +144,25 @@ describe("reverseString", () => {
 
   it("handles empty string", () => {
     expect(str(reverseString(""))).toBe("");
+  });
+});
+
+describe("markdownToHtml", () => {
+  it("renders safe https links", () => {
+    const html = str(markdownToHtml("[docs](https://example.com/path)"));
+    expect(html).toContain('href="https://example.com/path"');
+    expect(html).toContain("docs");
+  });
+
+  it("blocks attribute breakout in href", () => {
+    const html = str(markdownToHtml('[click](https://evil.com" onmouseover="alert(1))'));
+    expect(html).not.toContain("onmouseover");
+    expect(html).toContain('href="#"');
+  });
+
+  it("blocks javascript: URLs", () => {
+    const html = str(markdownToHtml("[x](javascript:alert(1))"));
+    expect(html).toContain('href="#"');
+    expect(html).not.toContain("javascript:");
   });
 });

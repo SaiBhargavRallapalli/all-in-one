@@ -14,10 +14,16 @@ import { breadcrumbSchema } from "@/lib/breadcrumb-schema";
 import { faqPageGraphNode } from "@/lib/schema-helpers";
 import { categoryBrowseHref, categoryLabel } from "@/lib/category-navigation";
 import { toolPageStructuredGraph } from "@/lib/tool-structured-data";
-import { publicHrefForToolSlug } from "@/lib/devbench-workspaces";
+import {
+  publicHrefForToolSlug,
+  TOOL_SLUG_TO_WORKSPACE,
+} from "@/lib/devbench-workspaces";
 
 export function generateStaticParams() {
-  return TOOLS.map((tool) => ({ slug: tool.slug }));
+  // Workspace-backed tools redirect away from /tools/[slug] — skip static shells.
+  return TOOLS.filter((tool) => !(tool.slug in TOOL_SLUG_TO_WORKSPACE)).map(
+    (tool) => ({ slug: tool.slug }),
+  );
 }
 
 export async function generateMetadata({
@@ -34,7 +40,7 @@ export async function generateMetadata({
   const title = extra?.title ?? `${tool.name} — Free Online Tool`;
   const description = extra?.metaDescription ??
     `${tool.description} Runs entirely in your browser — no signup, no uploads, client-side only.`;
-  const canonicalPath = `/tools/${tool.slug}`;
+  const canonicalPath = publicHrefForToolSlug(tool.slug);
   const ogImageUrl = `${SITE_URL}/tools/${tool.slug}/opengraph-image`;
   return {
     title,
@@ -62,19 +68,20 @@ export default async function ToolSlugLayout({
   const tool = getToolBySlug(slug);
   const faqs = TOOL_FAQS[slug] ?? [];
   const extra = tool ? TOOL_PAGE_CONTENT[slug] : undefined;
+  const publicHref = tool ? publicHrefForToolSlug(tool.slug) : `/tools/${slug}`;
 
   const graph: object[] = [];
 
   if (tool) {
     const appDescription =
       extra?.metaDescription ??
-      `${tool.description} Runs entirely in your browser — no signup, no uploads.`;
+      `${tool.description} Runs entirely in your browser — no uploads to a server.`;
     graph.push(
       {
         "@type": "WebApplication",
-        "@id": `${SITE_URL}/tools/${slug}/#webapp`,
+        "@id": `${SITE_URL}${publicHref}/#webapp`,
         name: tool.name,
-        url: `${SITE_URL}/tools/${slug}`,
+        url: `${SITE_URL}${publicHref}`,
         description: appDescription,
         applicationCategory: "DeveloperApplication",
         operatingSystem: "Web",
@@ -123,7 +130,7 @@ export default async function ToolSlugLayout({
               name: categoryLabel(tool.category),
               path: categoryBrowseHref(tool.category),
             },
-            { name: tool.name, path: publicHrefForToolSlug(tool.slug) },
+            { name: tool.name, path: publicHref },
           ])}
         />
       )}

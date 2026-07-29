@@ -41,9 +41,10 @@ export default function HtmlPreviewTool({ tool }: { tool: Tool }) {
   const [allowJs, setAllowJs] = useState(false);
   const [view, setView] = useState<View>("split");
 
-  const sandbox = allowJs
-    ? "allow-scripts allow-same-origin allow-modals"
-    : "allow-same-origin";
+  // Never combine allow-scripts with allow-same-origin on srcDoc — that would
+  // give the iframe the parent origin and let untrusted HTML escape the sandbox.
+  // allow-scripts alone runs in an opaque unique origin (safe for previews).
+  const sandbox = allowJs ? "allow-scripts allow-modals allow-forms" : "";
 
   return (
     <div className="min-h-screen bg-background">
