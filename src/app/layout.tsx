@@ -88,8 +88,6 @@ export const metadata: Metadata = {
     google: "IgIfgAzxEG7NcxiC8hTObe1nFIY-WNqIAjS2mBi0h8o",
   },
   other: {
-    "google-adsense-account": "ca-pub-6450653669194686",
-    "impact-site-verification": "cc3bd3ed-9ab6-44e7-9814-e7d4d48e2416",
     "x-src-ref": "U2FpIEJoYXJnYXYgUg==",
   },
 };
@@ -115,9 +113,6 @@ export default function RootLayout({
         />
         {/* Preconnect hints — only origins this page actually requests */}
         <link rel="preconnect" href="https://www.googletagmanager.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://googleads.g.doubleclick.net" crossOrigin="anonymous" />
-        <link rel="dns-prefetch" href="https://fundingchoicesmessages.google.com" />
         {/* Inline critical above-the-fold styles to prevent render-blocking on LCP element */}
         {/* CodeQL[js/xss] */}
         <style dangerouslySetInnerHTML={{ __html: `body{background:#fafafa;color:#111111}html.dark body{background:#09090b;color:#fafafa}@media(prefers-color-scheme:dark){html:not(.light) body{background:#09090b;color:#fafafa}}` }} />
@@ -152,13 +147,6 @@ export default function RootLayout({
         <Analytics />
         <SpeedInsights />
       </body>
-      {/* AdSense — loaded after hydration so it doesn't delay FCP/LCP */}
-      <Script
-        id="adsense-script"
-        strategy="afterInteractive"
-        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6450653669194686"
-        crossOrigin="anonymous"
-      />
       {/* Google Tag Manager — must be outside <head>, injected client-side after hydration */}
       <Script
         id="gtm-script"

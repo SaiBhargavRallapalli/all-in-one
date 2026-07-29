@@ -2,44 +2,12 @@
 import Link from "next/link";
 import { Shield, ExternalLink } from "lucide-react";
 import DevBenchMark from "@/components/DevBenchMark";
-import TrackedAffiliateLink from "@/components/TrackedAffiliateLink";
 import {
   footerCategoryLinks,
   getPopularTools,
   toolNavHref,
 } from "@/lib/site-navigation";
 import { relatedToolLinkLabel } from "@/lib/related-tools";
-
-const AFFILIATE_LINKS = [
-  {
-    label: "Shared Hosting",
-    href: "https://namecheap.pxf.io/c/7275861/3884366/5618?partnerpropertyid=8365175",
-    desc: "from $1.58/mo",
-    vendor: "namecheap",
-    offer: "shared_hosting",
-  },
-  {
-    label: "VPS Hosting",
-    href: "https://namecheap.pxf.io/c/7275861/3884368/5618?partnerpropertyid=8365175",
-    desc: "from $6.88/mo",
-    vendor: "namecheap",
-    offer: "vps_hosting",
-  },
-  {
-    label: "Domains, SSLs & DNS",
-    href: "https://namecheap.pxf.io/c/7275861/3884352/5618?partnerpropertyid=8365175",
-    desc: "discounts sitewide",
-    vendor: "namecheap",
-    offer: "domains_ssl_dns",
-  },
-  {
-    label: "Scapia Travel Card",
-    href: "https://apply.scapia.cards/landing_page?referral_code=qzgaii",
-    desc: "no annual fee",
-    vendor: "scapia",
-    offer: "credit_card",
-  },
-];
 
 export default function Footer() {
   const popularTools = getPopularTools();
@@ -87,28 +55,6 @@ export default function Footer() {
         </div>
 
         <div className="mb-6 pb-6 border-b border-border">
-          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2.5 text-center sm:text-left">
-            Sponsors
-          </p>
-          <div className="flex flex-wrap gap-3 justify-center sm:justify-start">
-            {AFFILIATE_LINKS.map((link) => (
-              <TrackedAffiliateLink
-                key={link.href}
-                href={link.href}
-                vendor={link.vendor}
-                offer={link.offer}
-                placement="footer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              >
-                <span className="font-medium">{link.label}</span>
-                <span className="opacity-70">{link.desc}</span>
-                <ExternalLink aria-hidden="true" className="h-3 w-3 opacity-50" />
-              </TrackedAffiliateLink>
-            ))}
-          </div>
-        </div>
-
-        <div className="mb-6 pb-6 border-b border-border">
           <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-3 text-center sm:text-left">
             Also from DevBench
           </p>
@@ -141,45 +87,6 @@ export default function Footer() {
                 {app.name}
               </a>
             ))}
-          </div>
-        </div>
-
-        <div className="mb-6 pb-6 border-b border-border">
-          <div className="flex flex-col items-center justify-center gap-6 sm:flex-row sm:flex-wrap sm:gap-8">
-            <a
-              href="https://www.producthunt.com/products/devbench-2/reviews/new?utm_source=badge-product_review&utm_medium=badge"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block rounded-lg ring-offset-background transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              aria-label="Leave DevBench a review on Product Hunt"
-            >
-              <img
-                src="https://api.producthunt.com/widgets/embed-image/v1/product_review.svg?product_id=1220022&theme=dark"
-                alt="Leave DevBench a review on Product Hunt"
-                width={250}
-                height={54}
-                loading="lazy"
-                decoding="async"
-                className="h-[54px] w-[250px]"
-              />
-            </a>
-            <a
-              href="https://www.producthunt.com/products/devbench-2?utm_source=badge-follow&utm_medium=badge"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block rounded-lg ring-offset-background transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              aria-label="Follow DevBench on Product Hunt"
-            >
-              <img
-                src="https://api.producthunt.com/widgets/embed-image/v1/follow.svg?product_id=1220022&theme=neutral"
-                alt="Follow DevBench on Product Hunt"
-                width={250}
-                height={54}
-                loading="lazy"
-                decoding="async"
-                className="h-[54px] w-[250px]"
-              />
-            </a>
           </div>
         </div>
 

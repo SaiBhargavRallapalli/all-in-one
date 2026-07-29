@@ -5,7 +5,7 @@ import { breadcrumbSchema } from "@/lib/breadcrumb-schema";
 
 const title = "Privacy Policy";
 const description =
-  "DevBench privacy policy — all tools run client-side, Google AdSense advertising disclosure, cookie usage, and hosting information.";
+  "DevBench privacy policy — all tools run client-side, cookie usage, analytics, and hosting information.";
 
 export const metadata: Metadata = {
   title,

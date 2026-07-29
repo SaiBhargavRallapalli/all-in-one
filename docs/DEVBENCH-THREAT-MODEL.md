@@ -86,7 +86,7 @@ Inventory should stay minimal. Any new `app/api/**` route must be listed here wi
 ### 5.1 XSS
 
 - Prefer **React text nodes**; avoid `dangerouslySetInnerHTML` unless sanitized.
-- **CSP** is defined in `next.config.ts` (allowlist for GTM, AdSense, Vercel scripts, etc.). `unsafe-inline` / `unsafe-eval` are constrained by product needs (see comments in that file). Treat CSP tightening as a **tracked migration** (breaks GTM/ads if done naively).
+- **CSP** is defined in `next.config.ts` (allowlist for GTM, Vercel scripts, etc.). `unsafe-inline` / `unsafe-eval` are constrained by product needs (see comments in that file). Treat CSP tightening as a **tracked migration** (breaks GTM if done naively).
 
 ### 5.2 Sensitive data in URLs
 
@@ -104,14 +104,13 @@ Inventory should stay minimal. Any new `app/api/**` route must be listed here wi
 
 Loaded per `layout` / marketing needs (exact list may drift — verify in repo):
 
-- **Google Tag Manager** / **AdSense** / related Google domains (CSP `connect-src` / `script-src`).
+- **Google Tag Manager** / related Google domains (CSP `connect-src` / `script-src`).
 - **Vercel Analytics / Speed Insights** (`va.vercel-scripts.com`, etc.).
-- **Product Hunt** badges (images, outbound links).
 
 **Implications:**
 
 - **Subresource Integrity** is not uniformly applied to third-party scripts (they often change) — reliance is on **CSP allowlist** + vendor trust.
-- **Enterprise blockers** may block categories (ads, “uncategorized” domains). Mitigation is product/commercial (lite “tools-only” page variant), not purely code.
+- **Enterprise blockers** may block analytics categories. Mitigation is product/commercial (lite “tools-only” page variant), not purely code.
 
 ---
 

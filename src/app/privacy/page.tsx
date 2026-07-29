@@ -17,7 +17,7 @@ export default function PrivacyPage() {
           Back to home
         </Link>
         <h1 className="text-3xl font-bold tracking-tight">Privacy Policy</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Last updated: May 2026</p>
+        <p className="mt-2 text-sm text-muted-foreground">Last updated: July 2026</p>
         <div className="mt-6 space-y-6 text-muted-foreground leading-relaxed">
 
           <p>
@@ -202,57 +202,21 @@ export default function PrivacyPage() {
             .
           </p>
 
-          <h2 className="text-lg font-semibold text-foreground pt-2">3. Advertising</h2>
+          <h2 className="text-lg font-semibold text-foreground pt-2">3. Cookies and local storage</h2>
           <p>
-            This site uses <strong className="text-foreground">Google AdSense</strong> to
-            display advertisements. Google and its advertising partners use cookies and similar
-            technologies to serve ads based on your prior visits to DevBench and other websites.
-            Google&apos;s use of advertising cookies allows it and its partners to serve ads
-            based on your visit here and/or other sites on the internet.
+            DevBench itself stores items in your browser&apos;s{" "}
+            <code className="text-xs bg-muted px-1 py-0.5 rounded">localStorage</code> such as
+            your preferred light or dark colour theme and optional tool preferences (for example
+            favourites and recent tools). These preferences never leave your device and are not
+            sent to any server as part of normal tool usage.
           </p>
           <p>
-            You can opt out of personalised advertising by visiting{" "}
-            <a
-              href="https://adssettings.google.com"
-              target="_blank"
-              rel="nofollow noopener noreferrer"
-              className="text-accent hover:underline"
-            >
-              Google Ad Settings
-            </a>{" "}
-            or{" "}
-            <a
-              href="https://www.aboutads.info/choices"
-              target="_blank"
-              rel="nofollow noopener noreferrer"
-              className="text-accent hover:underline"
-            >
-              YourAdChoices
-            </a>
-            . DevBench does not control the cookies set by Google AdSense or its advertising
-            partners.
-          </p>
-          <p>
-            DevBench also participates in the <strong className="text-foreground">Namecheap
-            affiliate programme</strong> (via Impact.com). If you click a Namecheap link and
-            make a purchase, we may earn a commission at no extra cost to you. Affiliate links
-            are clearly presented as hosting or domain recommendations.
-          </p>
-
-          <h2 className="text-lg font-semibold text-foreground pt-2">4. Cookies and local storage</h2>
-          <p>
-            DevBench itself stores one item in your browser&apos;s{" "}
-            <code className="text-xs bg-muted px-1 py-0.5 rounded">localStorage</code>: your
-            preferred light or dark colour theme. This preference never leaves your device and
-            is not sent to any server.
-          </p>
-          <p>
-            Third-party services (Google Analytics, Google AdSense, Vercel) may set their own
+            Third-party services (Google Analytics / Tag Manager, Vercel) may set their own
             cookies. These are governed by their respective privacy policies, which are linked
-            in sections 2 and 3 above.
+            in section 2 above.
           </p>
 
-          <h2 className="text-lg font-semibold text-foreground pt-2">5. Hosting and server logs</h2>
+          <h2 className="text-lg font-semibold text-foreground pt-2">4. Hosting and server logs</h2>
           <p>
             DevBench is hosted on <strong className="text-foreground">Vercel</strong>. Vercel
             may collect standard server access logs (IP address, requested URL, HTTP status
@@ -268,7 +232,7 @@ export default function PrivacyPage() {
             for details on how they handle this data.
           </p>
 
-          <h2 className="text-lg font-semibold text-foreground pt-2">6. Contact form</h2>
+          <h2 className="text-lg font-semibold text-foreground pt-2">5. Contact form</h2>
           <p>
             The{" "}
             <Link href="/contact" className="text-accent hover:underline">
@@ -281,7 +245,7 @@ export default function PrivacyPage() {
             as long as necessary to respond.
           </p>
 
-          <h2 className="text-lg font-semibold text-foreground pt-2">7. Children&apos;s privacy</h2>
+          <h2 className="text-lg font-semibold text-foreground pt-2">6. Children&apos;s privacy</h2>
           <p>
             DevBench is not directed at children under 13 years of age. We do not knowingly
             collect personal information from children under 13. If you believe a child has
@@ -292,7 +256,7 @@ export default function PrivacyPage() {
             and we will promptly delete it.
           </p>
 
-          <h2 className="text-lg font-semibold text-foreground pt-2">8. Your rights</h2>
+          <h2 className="text-lg font-semibold text-foreground pt-2">7. Your rights</h2>
           <p>
             Because DevBench does not collect personal data through tool usage, there is
             generally no data stored about you to access, correct, or delete. If you have
@@ -300,7 +264,7 @@ export default function PrivacyPage() {
             out and we will honour that request promptly.
           </p>
 
-          <h2 className="text-lg font-semibold text-foreground pt-2">9. Changes to this policy</h2>
+          <h2 className="text-lg font-semibold text-foreground pt-2">8. Changes to this policy</h2>
           <p>
             We may update this Privacy Policy as the site evolves — for example, when new
             tools or features are added. The &ldquo;last updated&rdquo; date at the top of

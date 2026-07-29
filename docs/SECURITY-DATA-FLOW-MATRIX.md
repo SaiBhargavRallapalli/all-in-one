@@ -16,7 +16,7 @@ Legend: **Net** = network from user’s browser (or server via our API). **Store
 | **Background remover** | `@imgly/background-removal` | Yes — model CDN (see package / CSP) | No | None |
 | **Mermaid editor** | `/tools/mermaid-editor` | Yes — Mermaid.js CDN (first load) | No | None |
 | **DNS / IP / npm tools** | `dns-lookup`, `ip-info`, `npm-compare` | Yes — Cloudflare DoH, ipapi.co, registry.npmjs.org | No | None |
-| **Site shell** | Header, analytics | Yes — GTM, AdSense, Vercel scripts (CSP allowlist) | Same-origin | `theme`; tool search `devbench:recent` / `devbench:favourites` |
+| **Site shell** | Header, analytics | Yes — GTM, Vercel scripts (CSP allowlist) | Same-origin | `theme`; tool search `devbench:recent` / `devbench:favourites` |
 
 ## Server routes (inventory)
 

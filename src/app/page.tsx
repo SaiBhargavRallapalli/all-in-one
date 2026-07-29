@@ -9,8 +9,6 @@ import { FOOTER_CATEGORY_ORDER } from "@/lib/site-navigation";
 import { getCategoryHighlightTools } from "@/lib/category-navigation";
 import { toolGroupSchema } from "@/lib/tool-structured-data";
 import { websiteSchemaWithSearch } from "@/lib/site-organization-schema";
-import TrackedAffiliateLink from "@/components/TrackedAffiliateLink";
-import EngagementFloatingCta from "@/components/EngagementFloatingCta";
 import { publicHrefForToolSlug } from "@/lib/devbench-workspaces";
 import EngagementHome from "@/components/EngagementHomeLazy";
 
@@ -48,7 +46,7 @@ const HOMEPAGE_FAQS = [
   },
   {
     q: "Is DevBench completely free?",
-    a: "Yes. All tools on DevBench are free to use, forever. There are no paywalls, usage limits, or premium tiers. The site is supported by unobtrusive affiliate links and ads.",
+    a: "Yes. All tools on DevBench are free to use, forever. There are no paywalls, usage limits, or premium tiers.",
   },
   {
     q: "Does DevBench store or upload my data?",
@@ -87,10 +85,10 @@ export default function HomePage() {
       <Header />
       <FavoritesBar />
       <main id="main" className="flex-1">
-        {/* Hero — server-rendered for fast LCP */}
+        {/* Hero — focused: brand, one CTA path, popular tools — then jump to explorer */}
         <section className="relative overflow-hidden border-b border-border">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,var(--accent-light),transparent_70%)] opacity-60" />
-          <div className="relative max-w-6xl mx-auto px-4 py-20 sm:py-28 text-center">
+          <div className="relative max-w-6xl mx-auto px-4 py-14 sm:py-20 text-center">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-6 rounded-full border border-border bg-card text-sm text-muted-foreground">
               <Sparkles
                 className="h-3.5 w-3.5 shrink-0 text-accent"
@@ -106,16 +104,15 @@ export default function HomePage() {
               <span className="text-accent">Developer Tools</span>
             </h1>
             <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 leading-relaxed">
-              Whether you ship code, study, or just need to fix a file — decode JWTs, merge PDFs,
-              convert images, test regex, generate UUIDs, calculate finances, and more. Everything
-              runs directly in your browser. Free, no install.
+              Decode JWTs, merge PDFs, convert images, test regex, generate UUIDs, and more —
+              all in your browser. Free, no install.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-8">
               <a
                 href="#tools"
                 className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3.5 text-base font-semibold text-accent-foreground shadow-md transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                title="Browse all 100+ free in-browser tools"
+                title="Browse all free in-browser tools"
               >
                 Browse all {TOOLS.length} tools
                 <ArrowRight className="h-4 w-4 shrink-0" aria-hidden />
@@ -129,8 +126,20 @@ export default function HomePage() {
               </Link>
             </div>
 
+            <p className="mb-6 text-xs text-muted-foreground">
+              Tip: press{" "}
+              <kbd className="rounded border border-border bg-card px-1.5 py-0.5 font-mono text-[10px]">
+                ⌘K
+              </kbd>{" "}
+              or{" "}
+              <kbd className="rounded border border-border bg-card px-1.5 py-0.5 font-mono text-[10px]">
+                Ctrl+K
+              </kbd>{" "}
+              anytime to search tools
+            </p>
+
             {/* Popular tools strip — server-rendered so Google sees diverse tool links */}
-            <div className="mb-10">
+            <div>
               <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground mb-3">
                 Popular tools
               </p>
@@ -153,122 +162,73 @@ export default function HomePage() {
                 ))}
               </div>
             </div>
-
-            <div className="max-w-5xl mx-auto space-y-10 text-left md:text-center">
-              <section aria-labelledby="why-devbench-heading">
-                <h2
-                  id="why-devbench-heading"
-                  className="text-lg font-semibold tracking-tight text-foreground sm:text-xl"
-                >
-                  Why DevBench for free online developer tools
-                </h2>
-                <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-                  {WHY_DEVBENCH_FEATURES.map((f) => (
-                    <div
-                      key={f.title}
-                      className="flex flex-row md:flex-col md:items-center gap-3 md:gap-4 rounded-2xl border border-border/70 bg-card/50 px-4 py-5 md:text-center shadow-sm shadow-black/[0.03]"
-                    >
-                      <div className="shrink-0 rounded-xl bg-accent/10 p-2.5 md:p-3">
-                        <f.icon className="h-5 w-5 text-accent md:h-6 md:w-6" aria-hidden />
-                      </div>
-                      <div className="min-w-0 flex-1 md:flex-none">
-                        <h3 className="text-sm font-semibold text-foreground">{f.title}</h3>
-                        <p className="mt-1 text-xs leading-relaxed text-muted-foreground md:mx-auto md:max-w-[18rem]">
-                          {f.desc}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              <section aria-labelledby="tool-count-heading">
-                <h2
-                  id="tool-count-heading"
-                  className="text-lg font-semibold tracking-tight text-foreground sm:text-xl"
-                >
-                  {TOOLS.length}+ free online developer tools in one place
-                </h2>
-                <div className="mt-6 flex flex-row md:flex-col md:items-center gap-3 md:gap-4 rounded-2xl border border-border/70 bg-card/50 px-4 py-5 md:mx-auto md:max-w-md shadow-sm shadow-black/[0.03]">
-                  <div className="shrink-0 rounded-xl bg-accent/10 p-2.5 md:p-3">
-                    <Globe className="h-5 w-5 text-accent md:h-6 md:w-6" aria-hidden />
-                  </div>
-                  <p className="min-w-0 flex-1 text-xs leading-relaxed text-muted-foreground md:max-w-[18rem]">
-                    From JSON and PDFs to money, health, and date helpers — free forever.
-                  </p>
-                </div>
-              </section>
-
-              <section aria-labelledby="faq-heading" className="text-left">
-                <h2
-                  id="faq-heading"
-                  className="text-lg font-semibold tracking-tight text-foreground sm:text-xl mb-5"
-                >
-                  Frequently asked questions
-                </h2>
-                <dl className="space-y-4">
-                  {HOMEPAGE_FAQS.map((faq) => (
-                    <div key={faq.q} className="rounded-2xl border border-border/70 bg-card/50 px-5 py-4 shadow-sm shadow-black/[0.03]">
-                      <dt className="text-sm font-semibold text-foreground">{faq.q}</dt>
-                      <dd className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{faq.a}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </section>
-            </div>
           </div>
         </section>
 
-        <div className="border-b border-border bg-muted/30">
-          <div className="max-w-6xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
-            <span className="text-muted-foreground uppercase tracking-wide font-medium text-[10px]">
-              Affiliate
-            </span>
-            <TrackedAffiliateLink
-              href="https://namecheap.pxf.io/c/7275861/3884366/5618?partnerpropertyid=8365175"
-              vendor="namecheap"
-              offer="shared_hosting"
-              placement="homepage_sponsor_bar"
-              className="hover:text-foreground transition-colors"
-            >
-              Shared Hosting from $1.58/mo ↗
-            </TrackedAffiliateLink>
-            <span aria-hidden="true" className="opacity-30 hidden sm:inline">·</span>
-            <TrackedAffiliateLink
-              href="https://namecheap.pxf.io/c/7275861/3884368/5618?partnerpropertyid=8365175"
-              vendor="namecheap"
-              offer="vps_hosting"
-              placement="homepage_sponsor_bar"
-              className="hover:text-foreground transition-colors"
-            >
-              VPS Hosting from $6.88/mo ↗
-            </TrackedAffiliateLink>
-            <span aria-hidden="true" className="opacity-30 hidden sm:inline">·</span>
-            <TrackedAffiliateLink
-              href="https://namecheap.pxf.io/c/7275861/3884352/5618?partnerpropertyid=8365175"
-              vendor="namecheap"
-              offer="domains_ssl_dns"
-              placement="homepage_sponsor_bar"
-              className="hover:text-foreground transition-colors"
-            >
-              Domains, SSLs & Premium DNS — Discounts Sitewide ↗
-            </TrackedAffiliateLink>
-            <span aria-hidden="true" className="opacity-30 hidden sm:inline">·</span>
-            <TrackedAffiliateLink
-              href="https://apply.scapia.cards/landing_page?referral_code=qzgaii"
-              vendor="scapia"
-              offer="credit_card"
-              placement="homepage_sponsor_bar"
-              className="hover:text-foreground transition-colors"
-            >
-              Scapia Travel Credit Card — No Annual Fee ↗
-            </TrackedAffiliateLink>
-          </div>
-        </div>
-
         <EngagementHome />
+
+        {/* Supporting content after tool discovery */}
+        <section className="border-t border-border">
+          <div className="max-w-6xl mx-auto px-4 py-14 sm:py-16 space-y-12 text-left md:text-center">
+            <section aria-labelledby="why-devbench-heading">
+              <h2
+                id="why-devbench-heading"
+                className="text-lg font-semibold tracking-tight text-foreground sm:text-xl"
+              >
+                Why DevBench
+              </h2>
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+                {WHY_DEVBENCH_FEATURES.map((f) => (
+                  <div
+                    key={f.title}
+                    className="flex flex-row md:flex-col md:items-center gap-3 md:gap-4 rounded-2xl border border-border/70 bg-card/50 px-4 py-5 md:text-center shadow-sm shadow-black/[0.03]"
+                  >
+                    <div className="shrink-0 rounded-xl bg-accent/10 p-2.5 md:p-3">
+                      <f.icon className="h-5 w-5 text-accent md:h-6 md:w-6" aria-hidden />
+                    </div>
+                    <div className="min-w-0 flex-1 md:flex-none">
+                      <h3 className="text-sm font-semibold text-foreground">{f.title}</h3>
+                      <p className="mt-1 text-xs leading-relaxed text-muted-foreground md:mx-auto md:max-w-[18rem]">
+                        {f.desc}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                <div className="flex flex-row md:flex-col md:items-center gap-3 md:gap-4 rounded-2xl border border-border/70 bg-card/50 px-4 py-5 md:text-center shadow-sm shadow-black/[0.03]">
+                  <div className="shrink-0 rounded-xl bg-accent/10 p-2.5 md:p-3">
+                    <Globe className="h-5 w-5 text-accent md:h-6 md:w-6" aria-hidden />
+                  </div>
+                  <div className="min-w-0 flex-1 md:flex-none">
+                    <h3 className="text-sm font-semibold text-foreground">
+                      {TOOLS.length}+ tools in one place
+                    </h3>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground md:mx-auto md:max-w-[18rem]">
+                      From JSON and PDFs to money, health, and date helpers — free forever.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section aria-labelledby="faq-heading" className="text-left">
+              <h2
+                id="faq-heading"
+                className="text-lg font-semibold tracking-tight text-foreground sm:text-xl mb-5"
+              >
+                Frequently asked questions
+              </h2>
+              <dl className="space-y-4">
+                {HOMEPAGE_FAQS.map((faq) => (
+                  <div key={faq.q} className="rounded-2xl border border-border/70 bg-card/50 px-5 py-4 shadow-sm shadow-black/[0.03]">
+                    <dt className="text-sm font-semibold text-foreground">{faq.q}</dt>
+                    <dd className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{faq.a}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          </div>
+        </section>
       </main>
-      <EngagementFloatingCta />
       <Footer />
 
       <JsonLd data={websiteSchemaWithSearch()} />

@@ -25,7 +25,7 @@
 
 ## Layout composition
 
-- **`src/app/layout.tsx`** — Root HTML, fonts, GTM/AdSense script tags, global `Header`, command palette, service worker registration, analytics.
+- **`src/app/layout.tsx`** — Root HTML, fonts, GTM script tags, global `Header`, command palette, service worker registration, analytics.
 - **Per-route layouts** — e.g. `graph-calculator/layout.tsx` adds SEO copy + `Footer` below the page.
 
 ## Client-only vs network
