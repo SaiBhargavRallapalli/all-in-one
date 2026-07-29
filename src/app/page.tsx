@@ -50,7 +50,7 @@ const HOMEPAGE_FAQS = [
   },
   {
     q: "Does DevBench store or upload my data?",
-    a: "No. Every tool runs client-side in your browser. Your JSON, JWTs, passwords, PDFs, and code never leave your device. DevBench has no backend that processes your input.",
+    a: "Almost everything runs client-side in your browser — JSON, JWTs, passwords, most PDFs, and similar inputs never leave your device, and we do not store them. A few features need the network by design: API Tester and Webhook Simulator (via our CORS proxy), Notebook → PDF conversion, and the Go playground (which forwards code to go.dev). We do not keep those payloads after the response.",
   },
   {
     q: "Do I need to create an account?",

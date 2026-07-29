@@ -1,14 +1,27 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import {
   isPrivateAddress,
   isBlockedHost,
+  isIpHostname,
   isAllowedProxyUrl,
+  assertHostnameResolvesPublic,
   sanitizeProxyHeaders,
   ProxyRequestSchema,
   MAX_URL_LENGTH,
   MAX_HEADER_VALUE_LENGTH,
   MAX_PAYLOAD_BYTES,
 } from "./validation";
+
+const { lookupMock } = vi.hoisted(() => ({
+  lookupMock: vi.fn(),
+}));
+vi.mock("dns/promises", () => ({
+  lookup: lookupMock,
+  default: { lookup: lookupMock },
+}));
+
+const publicLookup = [{ address: "93.184.216.34", family: 4 as const }];
+const privateLookup = [{ address: "169.254.169.254", family: 4 as const }];
 
 describe("isPrivateAddress", () => {
   it("blocks 10.x.x.x", () => expect(isPrivateAddress("10.0.0.1")).toBe(true));
@@ -41,6 +54,44 @@ describe("isBlockedHost", () => {
     expect(isBlockedHost("192.168.0.1")).toBe(true));
   it("allows public domain", () => expect(isBlockedHost("api.example.com")).toBe(false));
   it("allows public IP", () => expect(isBlockedHost("8.8.8.8")).toBe(false));
+});
+
+describe("isIpHostname", () => {
+  it("detects IPv4 and IPv6 literals", () => {
+    expect(isIpHostname("8.8.8.8")).toBe(true);
+    expect(isIpHostname("[2001:db8::1]")).toBe(true);
+    expect(isIpHostname("::ffff:127.0.0.1")).toBe(true);
+    expect(isIpHostname("api.example.com")).toBe(false);
+  });
+});
+
+describe("assertHostnameResolvesPublic", () => {
+  afterEach(() => {
+    lookupMock.mockReset();
+  });
+
+  it("skips DNS for IP literals", async () => {
+    await expect(assertHostnameResolvesPublic("8.8.8.8")).resolves.toEqual({ ok: true });
+    expect(lookupMock).not.toHaveBeenCalled();
+  });
+
+  it("allows hostnames that resolve to public addresses", async () => {
+    lookupMock.mockResolvedValue(publicLookup);
+    await expect(assertHostnameResolvesPublic("example.com")).resolves.toEqual({ ok: true });
+  });
+
+  it("blocks hostnames that resolve to private addresses", async () => {
+    lookupMock.mockResolvedValue(privateLookup);
+    const r = await assertHostnameResolvesPublic("evil.example.com");
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.error).toMatch(/private|internal/i);
+  });
+
+  it("rejects unresolvable hostnames", async () => {
+    lookupMock.mockRejectedValue(new Error("ENOTFOUND"));
+    const r = await assertHostnameResolvesPublic("no-such-host.invalid");
+    expect(r.ok).toBe(false);
+  });
 });
 
 describe("isAllowedProxyUrl", () => {

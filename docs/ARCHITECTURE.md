@@ -14,7 +14,7 @@
 |------|---------|--------|
 | **Workspaces** | `/json`, `/yaml`, `/pdf`, `/graph-calculator`, … | Multi-tool pages; often `page.tsx` client components with large UI. |
 | **Single tools** | `/tools/[slug]` | Dynamic route per tool registry entry. |
-| **API** | `POST /api/proxy` | Server-side; see threat model. |
+| **API** | `POST /api/proxy`, `/api/convert-notebook`, `/api/playground/go` | Server-side; see threat model §4. |
 
 **Workspace discovery:** `src/lib/devbench-workspaces.ts` — single list for command palette, slugs → workspace hrefs (`TOOL_SLUG_TO_WORKSPACE`), etc.
 
@@ -25,13 +25,13 @@
 
 ## Layout composition
 
-- **`src/app/layout.tsx`** — Root HTML, fonts, GTM script tags, global `Header`, command palette, service worker registration, analytics.
+- **`src/app/layout.tsx`** — Root HTML, fonts, GTM script tags, command palette, service worker registration, analytics. (`Header` is rendered per page/workspace, not in the root layout.)
 - **Per-route layouts** — e.g. `graph-calculator/layout.tsx` adds SEO copy + `Footer` below the page.
 
 ## Client-only vs network
 
 - **Default:** Tools run in the browser; no data sent to DevBench servers.
-- **Exceptions:** API tester via `/api/proxy`; any future `app/api/*` must be documented in the threat model.
+- **Exceptions:** API tester / JSON URL load / webhooks via `/api/proxy`; notebook PDF via `/api/convert-notebook`; Go playground via `/api/playground/go`. Any new `app/api/*` must be documented in the threat model.
 
 ## PWA / offline
 

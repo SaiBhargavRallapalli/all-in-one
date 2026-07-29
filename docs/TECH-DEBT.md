@@ -17,14 +17,15 @@
 |-----------|----------------|
 | Broad refactor (rename packages, move all tools) | It unblocks (1) or (3) |
 | New abstraction layer | Two call sites need it; third is imminent |
-| Perfect CSP (remove `unsafe-inline`) | Legal/product sign-off on GTM/ads replacement path |
+| Perfect CSP (remove `unsafe-inline`) | Legal/product sign-off on GTM/analytics replacement path |
 | Migrate every tool to one layout component | New workspace ships and duplicates bugs |
 
 ## Known hotspots (edit as discovered)
 
 - **Flex / full-height workspaces** — must use `shrink-0` on chrome + `flex-1 min-h-0 overflow-hidden` on main; see `docs/ARCHITECTURE.md`.
-- **`/api/proxy`** — residual DNS-rebinding / open-relay risk; see threat model; prefer edge KV rate limits when traffic warrants.
-- **Notebook PDF path** — Chromium + optional jupyter remain heavy; prefer JS renderer on serverless.
+- **`/api/proxy`** — DNS resolve + production Origin now enforced; residual risk is split-horizon / public-looking internal hosts; prefer edge KV rate limits when traffic warrants.
+- **Notebook PDF path** — Chromium remains heavy on serverless; jupyter spawn is skipped on Vercel (JS renderer only).
+- **Notebook/markdown HTML** — regex sanitizers only; consider DOMPurify for richer notebook HTML if fidelity expands.
 
 ## Paydown cadence
 

@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   ProxyRequestSchema,
   isAllowedProxyUrl,
+  assertHostnameResolvesPublic,
   sanitizeProxyHeaders,
   MAX_PROXY_REDIRECTS,
 } from "./validation";
+import { clientIp, createRateLimiter, isAllowedOrigin } from "@/lib/api-guard";
 import { logger } from "@/lib/logger";
 
 const MAX_BODY_SIZE = 5 * 1024 * 1024; // 5 MB
@@ -12,42 +14,7 @@ const TIMEOUT_MS = 30_000;
 
 // Sliding-window rate limiter: 20 req/min per IP.
 // In-memory — per warm instance. Adequate for serverless abuse prevention.
-const RATE_WINDOW_MS = 60_000;
-const RATE_LIMIT = 20;
-const rateLimitMap = new Map<string, number[]>();
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const timestamps = (rateLimitMap.get(ip) ?? []).filter(
-    (t) => now - t < RATE_WINDOW_MS,
-  );
-  if (timestamps.length >= RATE_LIMIT) return true;
-  timestamps.push(now);
-  rateLimitMap.set(ip, timestamps);
-  return false;
-}
-
-// Requests without an Origin header (server-to-server, Postman, curl) are
-// allowed through. Browser-initiated cross-origin requests always include
-// Origin, so checking it is enough to prevent CSRF/tunneling from other sites.
-const ALLOWED_ORIGIN_RE =
-  /^https:\/\/(www\.devbench\.co\.in|devbench\.co\.in|[a-z0-9-]+\.devbench\.co\.in)$|^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
-
-function isAllowedOrigin(origin: string | null): boolean {
-  if (origin === null) return true;
-  return ALLOWED_ORIGIN_RE.test(origin);
-}
-
-function clientIp(req: NextRequest): string {
-  // Prefer platform-trusted hop when present (Vercel); fall back to XFF last.
-  const vercel = req.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim();
-  if (vercel) return vercel;
-  return (
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    req.headers.get("x-real-ip") ??
-    "unknown"
-  );
-}
+const isRateLimited = createRateLimiter(20);
 
 class ProxyBlockedError extends Error {
   constructor(message: string) {
@@ -74,6 +41,11 @@ async function fetchWithSafeRedirects(
     const allowed = isAllowedProxyUrl(currentUrl);
     if (!allowed.ok) {
       throw new ProxyBlockedError(allowed.error);
+    }
+
+    const resolved = await assertHostnameResolvesPublic(allowed.url.hostname);
+    if (!resolved.ok) {
+      throw new ProxyBlockedError(resolved.error);
     }
 
     const response = await fetch(currentUrl, {
@@ -168,6 +140,10 @@ export async function POST(req: NextRequest) {
       const finalCheck = isAllowedProxyUrl(response.url);
       if (!finalCheck.ok) {
         return NextResponse.json({ error: finalCheck.error }, { status: 403 });
+      }
+      const finalResolved = await assertHostnameResolvesPublic(finalCheck.url.hostname);
+      if (!finalResolved.ok) {
+        return NextResponse.json({ error: finalResolved.error }, { status: 403 });
       }
     }
 

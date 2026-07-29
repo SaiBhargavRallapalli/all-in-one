@@ -1,3 +1,4 @@
+import { lookup } from "dns/promises";
 import { z } from "zod";
 
 export const MAX_URL_LENGTH = 2048;
@@ -90,6 +91,47 @@ export function isBlockedHost(hostname: string): boolean {
     BLOCKED_HOSTS.has(`[${normalized}]`) ||
     isPrivateAddress(hostname)
   );
+}
+
+/** True when hostname is an IP literal (no DNS needed). */
+export function isIpHostname(hostname: string): boolean {
+  const h = hostname.replace(/^\[|\]$/g, "").toLowerCase();
+  if (parseDottedIpv4(h)) return true;
+  if (ipv4MappedFromV6(h)) return true;
+  if (/^\d+$/.test(h) || /^\d+(\.\d+){1,2}$/.test(h)) return true;
+  return h.includes(":");
+}
+
+/**
+ * Resolve hostname and reject if any address is private/internal (DNS rebinding).
+ * IP literals are skipped — they were already checked by `isAllowedProxyUrl`.
+ */
+export async function assertHostnameResolvesPublic(
+  hostname: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (isIpHostname(hostname)) return { ok: true };
+
+  let records: Array<{ address: string; family: number }>;
+  try {
+    records = await lookup(hostname, { all: true, verbatim: true });
+  } catch {
+    return { ok: false, error: "Could not resolve hostname." };
+  }
+
+  if (records.length === 0) {
+    return { ok: false, error: "Could not resolve hostname." };
+  }
+
+  for (const { address } of records) {
+    if (isBlockedHost(address) || isPrivateAddress(address)) {
+      return {
+        ok: false,
+        error: "Hostname resolves to a private/internal address.",
+      };
+    }
+  }
+
+  return { ok: true };
 }
 
 export function isAllowedProxyUrl(urlString: string): { ok: true; url: URL } | { ok: false; error: string } {

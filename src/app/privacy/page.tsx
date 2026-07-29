@@ -28,19 +28,19 @@ export default function PrivacyPage() {
 
           <h2 className="text-lg font-semibold text-foreground pt-2">1. Tool inputs and data processing</h2>
           <p>
-            DevBench tools process your input <strong className="text-foreground">entirely
+            Most DevBench tools process your input <strong className="text-foreground">entirely
             within your browser</strong>. Text you paste, files you upload, and options you
-            configure are handled by client-side JavaScript running on your own device. We do
-            not operate a backend that receives, stores, or logs your tool inputs.
+            configure are handled by client-side JavaScript on your device. We do not store or
+            log tool inputs. A small set of features uses short-lived server relays (listed
+            below); those requests are not retained after the response.
           </p>
           <p>
-            Examples of data that never reaches our servers: JSON payloads, JWT tokens, Base64
-            strings, passwords, hash inputs, API request bodies, PDF files, images, cron
-            expressions, code you run in the playground, and any other text or file you provide
-            to a DevBench tool.
+            Examples of data that never reaches our servers for client-only tools: JSON payloads,
+            JWT tokens, Base64 strings, passwords, hash inputs, most PDF/image edits, cron
+            expressions, and similar text or files you provide to DevBench tools.
           </p>
           <p>
-            The two exceptions are features that require a network request by design:
+            A few features require a network request by design:
           </p>
           <ul className="list-disc list-inside space-y-1.5 text-sm">
             <li>
@@ -53,6 +53,18 @@ export default function PrivacyPage() {
               <strong className="text-foreground">Webhook Simulator</strong> — payloads are
               sent to the destination URL you provide. HMAC signing happens in your browser
               before transmission; your signing secret is never sent to our servers.
+            </li>
+            <li>
+              <strong className="text-foreground">Notebook → PDF</strong> — the{" "}
+              <code className="text-xs bg-muted px-1 py-0.5 rounded">.ipynb</code> file you
+              upload is converted on our servers (then discarded); nothing is retained after
+              the PDF response.
+            </li>
+            <li>
+              <strong className="text-foreground">Go playground</strong> — Go source you run
+              is forwarded to the public{" "}
+              <code className="text-xs bg-muted px-1 py-0.5 rounded">go.dev</code> playground
+              compile API. Other playground languages stay in your browser.
             </li>
           </ul>
 
@@ -76,8 +88,10 @@ export default function PrivacyPage() {
             </p>
             <p className="pl-8">→ API Tester → CORS proxy → your target API</p>
             <p className="pl-8">→ Webhook Simulator → destination URL you enter</p>
+            <p className="pl-8">→ Notebook → PDF → convert API (ephemeral upload)</p>
+            <p className="pl-8">→ Go playground → go.dev compile API</p>
             <p className="pl-8">→ Page load → CDN (Vercel) serves static assets only</p>
-            <p className="pl-8">→ Analytics / ads → coarse visit metadata (no tool bodies)</p>
+            <p className="pl-8">→ Analytics → coarse visit metadata (no tool bodies)</p>
           </div>
           <ol className="list-decimal list-inside space-y-2 text-sm mt-4">
             <li>
@@ -98,8 +112,8 @@ export default function PrivacyPage() {
             </li>
             <li>
               <strong className="text-foreground">Egress</strong> — Data leaves the tab
-              only when you use an explicit network feature (API call, webhook) or when
-              third-party scripts record a page view.
+              only when you use an explicit network feature (API call, webhook, notebook
+              PDF, Go playground) or when analytics scripts record a page view.
             </li>
           </ol>
 

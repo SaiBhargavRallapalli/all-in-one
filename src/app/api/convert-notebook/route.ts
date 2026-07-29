@@ -6,43 +6,13 @@ import { join } from "path";
 import { tmpdir } from "os";
 import { randomBytes } from "crypto";
 import { notebookToHtml, type Notebook } from "@/lib/notebook-to-html";
+import { clientIp, createRateLimiter, isAllowedOrigin } from "@/lib/api-guard";
 
 const execAsync = promisify(exec);
 
 const MAX_FILE_BYTES = 50 * 1024 * 1024;
 
-const RATE_WINDOW_MS = 60_000;
-const RATE_LIMIT = 5;
-const rateLimitMap = new Map<string, number[]>();
-
-const ALLOWED_ORIGIN_RE =
-  /^https:\/\/(www\.devbench\.co\.in|devbench\.co\.in|[a-z0-9-]+\.devbench\.co\.in)$|^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
-
-function isAllowedOrigin(origin: string | null): boolean {
-  if (origin === null) return true;
-  return ALLOWED_ORIGIN_RE.test(origin);
-}
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const timestamps = (rateLimitMap.get(ip) ?? []).filter(
-    (t) => now - t < RATE_WINDOW_MS,
-  );
-  if (timestamps.length >= RATE_LIMIT) return true;
-  timestamps.push(now);
-  rateLimitMap.set(ip, timestamps);
-  return false;
-}
-
-function clientIp(req: NextRequest): string {
-  const vercel = req.headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim();
-  if (vercel) return vercel;
-  return (
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    req.headers.get("x-real-ip") ??
-    "unknown"
-  );
-}
+const isRateLimited = createRateLimiter(5);
 
 /** Safe Content-Disposition filename (no quotes/CRLF/path separators). */
 export function sanitizeDownloadFilename(name: string, fallback = "notebook.pdf"): string {
@@ -53,6 +23,27 @@ export function sanitizeDownloadFilename(name: string, fallback = "notebook.pdf"
     .trim();
   if (!cleaned || cleaned === ".pdf") return fallback;
   return cleaned.slice(0, 180);
+}
+
+/** Minimal notebook shape check before Chromium (reject garbage uploads early). */
+export function parseNotebookJson(raw: string): Notebook | null {
+  let data: unknown;
+  try {
+    data = JSON.parse(raw);
+  } catch {
+    return null;
+  }
+  if (!data || typeof data !== "object" || Array.isArray(data)) return null;
+  const cells = (data as { cells?: unknown }).cells;
+  if (!Array.isArray(cells)) return null;
+  return data as Notebook;
+}
+
+/** Skip jupyter on serverless — it isn't installed and only wastes spawn time. */
+function shouldTryJupyter(): boolean {
+  if (process.env.DEVBENCH_SKIP_JUPYTER === "1") return false;
+  if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) return false;
+  return true;
 }
 
 async function getBrowser() {
@@ -118,20 +109,30 @@ export async function POST(req: NextRequest) {
     await writeFile(ipynbPath, ipynbBuffer);
 
     // Step 1: ipynb → HTML
-    // Try jupyter nbconvert first (better fidelity: MathJax, syntax highlighting).
-    // Fall back to the JS renderer when jupyter is not available (Vercel, etc.).
+    // Prefer jupyter nbconvert on bare-metal hosts (better fidelity).
+    // On serverless, skip straight to the JS renderer.
     let html: string;
-    const jupyterAvailable = await execAsync(
-      `jupyter nbconvert --to html --output "${htmlPath}" "${ipynbPath}"`,
-      { timeout: 120_000 }
-    )
-      .then(() => true)
-      .catch(() => false);
+    let jupyterAvailable = false;
+
+    if (shouldTryJupyter()) {
+      jupyterAvailable = await execAsync(
+        `jupyter nbconvert --to html --output "${htmlPath}" "${ipynbPath}"`,
+        { timeout: 120_000 },
+      )
+        .then(() => true)
+        .catch(() => false);
+    }
 
     if (jupyterAvailable) {
       html = await readFile(htmlPath, "utf-8");
     } else {
-      const nb = JSON.parse(ipynbBuffer.toString("utf-8")) as Notebook;
+      const nb = parseNotebookJson(ipynbBuffer.toString("utf-8"));
+      if (!nb) {
+        return NextResponse.json(
+          { error: "Invalid notebook JSON — expected an object with a cells array." },
+          { status: 400 },
+        );
+      }
       const title = sanitizeDownloadFilename(file.name, "notebook.pdf").replace(/\.pdf$/i, "");
       html = notebookToHtml(nb, title, { includeCodeCells: true, includeOutputs: true });
     }

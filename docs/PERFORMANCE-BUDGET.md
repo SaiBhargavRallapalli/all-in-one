@@ -1,6 +1,6 @@
 # Performance budget
 
-**Purpose:** Keep “fast enough” objective for flagship routes under real conditions (ads/analytics present).  
+**Purpose:** Keep “fast enough” objective for flagship routes under real conditions (analytics present).  
 **Tooling:** Chrome Lighthouse (mobile + desktop), Web Vitals in production (`@vercel/speed-insights`), optional RUM.
 
 ## Routes to measure (minimum)
@@ -17,7 +17,7 @@ Measured on **throttled 4G / mid-tier mobile** Lighthouse simulation unless note
 
 | Metric | Target (mobile) | Notes |
 |--------|-----------------|--------|
-| **LCP** | ≤ 2.5 s | Hero / main content visible; ads may defer — optimize critical path. |
+| **LCP** | ≤ 2.5 s | Hero / main content visible; keep analytics off the critical path. |
 | **INP** | ≤ 200 ms | Interactions on JSON / graph must stay responsive. |
 | **CLS** | ≤ 0.1 | Avoid layout shift on font/theme load; stable toolbars (`shrink-0`, `min-h-0`). |
 | **TBT** (Lighthouse lab) | ≤ 300 ms | Third-party scripts dominate; track regressions, not absolutes. |

@@ -51,6 +51,15 @@ export default function Header() {
     return () => { document.body.style.overflow = ""; };
   }, [sideNavOpen]);
 
+  useEffect(() => {
+    if (!sideNavOpen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setSideNavOpen(false);
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [sideNavOpen]);
+
   function toggleTheme() {
     const root = document.documentElement;
     const next = !dark;
@@ -204,8 +213,10 @@ export default function Header() {
           />
           {/* Panel */}
           <aside
-            className="fixed right-0 top-0 z-50 h-full w-72 max-w-[85vw] bg-background border-l border-border shadow-2xl flex flex-col"
+            role="dialog"
+            aria-modal="true"
             aria-label="All tools navigation"
+            className="fixed right-0 top-0 z-50 h-full w-72 max-w-[85vw] bg-background border-l border-border shadow-2xl flex flex-col"
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
               <div className="flex items-center gap-2">

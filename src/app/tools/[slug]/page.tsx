@@ -321,7 +321,7 @@ export default function ToolPage() {
     return (
       <>
         <Header />
-        <main className="flex-1 flex items-center justify-center">
+        <main id="main" className="flex-1 flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-2xl font-bold mb-2">Tool Not Found</h1>
             <p className="text-muted-foreground mb-4">
@@ -338,7 +338,7 @@ export default function ToolPage() {
     return (
       <>
         <Header />
-        <main id="tool-main" className="flex-1 max-w-6xl mx-auto px-4 py-8 w-full scroll-mt-20">
+        <main id="main" className="flex-1 max-w-6xl mx-auto px-4 py-8 w-full scroll-mt-20">
           <CustomToolOutlet slug={slug} tool={tool} />
           <RelatedToolsSection
             slug={slug}
@@ -355,7 +355,7 @@ export default function ToolPage() {
   return (
     <>
       <Header />
-      <main id="tool-main" className="flex-1 max-w-6xl mx-auto px-4 py-8 w-full scroll-mt-20">
+      <main id="main" className="flex-1 max-w-6xl mx-auto px-4 py-8 w-full scroll-mt-20">
         {/* Header */}
         <div className="mb-6 animate-fade-in">
           <Breadcrumbs

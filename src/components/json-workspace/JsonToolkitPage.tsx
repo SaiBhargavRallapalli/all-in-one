@@ -1328,6 +1328,7 @@ export default function JsonToolkitPage({
   return (
     <div className="flex h-screen flex-col bg-background">
       <Header />
+      <main id="main" tabIndex={-1} className="flex min-h-0 flex-1 flex-col outline-none">
       {/* Workspace header */}
       <header className="border-b border-border bg-card px-4 py-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
@@ -2735,6 +2736,7 @@ export default function JsonToolkitPage({
           onAction={handleContextAction}
         />
       )}
+      </main>
     </div>
   );
 }

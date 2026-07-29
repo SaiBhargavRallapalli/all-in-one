@@ -2,7 +2,7 @@
 
 **Audience:** engineering, security review, enterprise IT.  
 **Scope:** production site (`www.devbench.co.in`), Next.js App Router, Vercel hosting.  
-**Last reviewed:** 2026-05-12 (update when CSP, proxy, or third-party embeds change).
+**Last reviewed:** 2026-07-29 (update when CSP, proxy, or third-party embeds change).
 
 ---
 
@@ -28,9 +28,9 @@ Most tools are **client-only**: computation stays in the browser. Exceptions are
    │  HTTPS
    ▼
 [ www.devbench.co.in — Next.js + static ]
-   │  POST /api/proxy  (API tester only; see §4)
-   ▼
-[ Target HTTP APIs — user-chosen URLs ]
+   │  POST /api/proxy              → user-chosen HTTP(S) targets (§4.1)
+   │  POST /api/convert-notebook   → Chromium PDF (§4.2)
+   │  POST /api/playground/go      → go.dev/_/compile (§4.3)
 ```
 
 Third parties loaded in the browser (scripts, frames, beacons) are a **separate boundary**: see §6.
@@ -61,21 +61,29 @@ Third parties loaded in the browser (scripts, frames, beacons) are a **separate 
 - **30s** timeout, **5 MB** response cap (oversize body replaced with message).
 - **Manual redirect following** (max 5 hops) — each `Location` is re-parsed and re-checked with the same host/scheme rules before the next request.
 - Strips hop-by-hop / dangerous request headers (`Host`, `Transfer-Encoding`, `Cookie`, …) before forwarding.
-- Origin allowlist for browser requests; per-IP rate limit (in-memory per instance).
+- Origin allowlist for browser requests; **null Origin rejected in production**.
+- Per-IP rate limit (in-memory per instance).
+- **DNS resolve** of each hop hostname — reject if any address is private/internal (rebinding defense).
 
 **Residual risks:**
 
-- **SSRF to “public” internal** — If a customer’s “public” hostname resolves to internal-only from our edge, DNS rebinding or split-horizon DNS could theoretically reach more than intended. Mitigation depth: optional **allowlist mode** for enterprise builds; DNS resolve + block private results; log hostname + status (PII-aware).
-- **Abuse as open relay** — Anyone can POST our origin (null Origin) to fetch arbitrary URLs. Mitigation: tighten Origin in production, edge/KV rate limits, CAPTCHA or auth for heavy use, monitoring egress anomalies.
+- **SSRF to “public” internal** — Split-horizon DNS where a hostname resolves to a *public* address from our edge but is sensitive elsewhere, or rare IP forms our heuristics miss. Mitigation depth: optional **allowlist mode** for enterprise builds; log hostname + status (PII-aware).
+- **Abuse as open relay** — Production requires Origin; residual is same-origin browser abuse / stolen sessions. Mitigation: edge/KV rate limits, CAPTCHA or auth for heavy use, monitoring egress anomalies.
 - **Response stored/logged** — Ensure no logging of full bodies in production analytics.
 
 ### 4.2 `POST /api/convert-notebook`
 
-**Purpose:** Convert uploaded `.ipynb` notebooks to PDF (Chromium / optional jupyter nbconvert).
+**Purpose:** Convert uploaded `.ipynb` notebooks to PDF (Chromium; optional jupyter nbconvert on non-serverless hosts).
 
-**Controls (current):** Origin allowlist (same pattern as proxy), 5 req/min per IP, 50 MB upload cap, sanitized `Content-Disposition` filename.
+**Controls (current):** Origin allowlist (null rejected in production), 5 req/min per IP, 50 MB upload cap, sanitized `Content-Disposition` filename, minimal notebook JSON shape check before Chromium, **jupyter spawn skipped on Vercel/serverless**.
 
-### 4.3 Other server routes
+### 4.3 `POST /api/playground/go`
+
+**Purpose:** Proxy Go source to `https://go.dev/_/compile` for the multi-language playground.
+
+**Controls (current):** Same Origin allowlist as proxy (null rejected in production), 20 req/min per IP, Zod body size cap (96 KB), 15s upstream timeout. Upstream is a fixed URL (not user-chosen).
+
+### 4.4 Other server routes
 
 Inventory should stay minimal. Any new `app/api/**` route must be listed here with purpose and auth model.
 
@@ -122,7 +130,7 @@ Implemented in `next.config.ts` (global `/(.*)`):
 - **HSTS** — `max-age=63072000; includeSubDomains; preload` (see comments re apex → www and Vercel dashboard pairing).
 - **X-Content-Type-Options: nosniff**, **X-Frame-Options: DENY**, **Referrer-Policy**, **Permissions-Policy** (camera/mic/geo off).
 
-**Maintainers:** When changing CSP, run **smoke tests** on graph, JSON, PDF tools, and GTM/ads in staging.
+**Maintainers:** When changing CSP, run **smoke tests** on graph, JSON, PDF tools, and GTM/analytics in staging.
 
 ---
 

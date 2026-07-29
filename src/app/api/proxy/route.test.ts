@@ -2,14 +2,26 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { NextRequest } from "next/server";
 
-function makeRequest(body: unknown, ip = "1.2.3.4") {
+const { lookupMock } = vi.hoisted(() => ({
+  lookupMock: vi.fn(async () => [{ address: "93.184.216.34", family: 4 as const }]),
+}));
+vi.mock("dns/promises", () => ({
+  lookup: lookupMock,
+  default: { lookup: lookupMock },
+}));
+
+function makeRequest(body: unknown, ip = "1.2.3.4", origin?: string | null) {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "x-forwarded-for": ip,
+  };
+  if (origin !== null) {
+    headers.Origin = origin ?? "http://localhost:3000";
+  }
   return new NextRequest("http://localhost/api/proxy", {
     method: "POST",
     body: JSON.stringify(body),
-    headers: {
-      "Content-Type": "application/json",
-      "x-forwarded-for": ip,
-    },
+    headers,
   });
 }
 
@@ -36,11 +48,44 @@ function mockFetchResponse(opts: {
 describe("POST /api/proxy", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn());
+    lookupMock.mockResolvedValue([{ address: "93.184.216.34", family: 4 as const }]);
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
     vi.resetModules();
+  });
+
+  it("rejects foreign Origin", async () => {
+    const { POST } = await import("./route");
+    const res = await POST(
+      makeRequest({ url: "https://api.example.com/", method: "GET" }, "9.9.9.0", "https://evil.example.com"),
+    );
+    expect(res.status).toBe(403);
+    expect(vi.mocked(fetch)).not.toHaveBeenCalled();
+  });
+
+  it("rejects missing Origin in production", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.resetModules();
+    const { POST } = await import("./route");
+    const res = await POST(
+      makeRequest({ url: "https://api.example.com/", method: "GET" }, "9.9.9.20", null),
+    );
+    expect(res.status).toBe(403);
+  });
+
+  it("blocks when DNS resolves to a private address", async () => {
+    lookupMock.mockResolvedValue([{ address: "10.0.0.5", family: 4 as const }]);
+    const { POST } = await import("./route");
+    const res = await POST(
+      makeRequest({ url: "https://rebinder.example.com/", method: "GET" }, "9.9.9.21"),
+    );
+    expect(res.status).toBe(403);
+    const json = await res.json();
+    expect(json.error).toMatch(/private|internal/i);
+    expect(vi.mocked(fetch)).not.toHaveBeenCalled();
   });
 
   it("returns 400 for non-JSON body", async () => {

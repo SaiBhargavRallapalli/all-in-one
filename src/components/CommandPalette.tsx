@@ -125,12 +125,15 @@ export default function CommandPalette({ tools }: { tools: Tool[] }) {
     >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Search workspaces and tools"
         className="relative w-full max-w-xl bg-card border border-border rounded-2xl shadow-2xl overflow-hidden"
         onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Input */}
         <div className="flex items-center gap-3 px-4 py-3.5 border-b border-border">
-          <Search className="w-4 h-4 text-muted-foreground shrink-0" />
+          <Search className="w-4 h-4 text-muted-foreground shrink-0" aria-hidden />
           <input
             ref={inputRef}
             type="text"
@@ -141,6 +144,7 @@ export default function CommandPalette({ tools }: { tools: Tool[] }) {
             }}
             onKeyDown={handleKeyDown}
             placeholder="Search workspaces & tools…"
+            aria-label="Search workspaces and tools"
             className="flex-1 bg-transparent text-foreground placeholder:text-muted-foreground text-sm outline-none"
             autoComplete="off"
           />

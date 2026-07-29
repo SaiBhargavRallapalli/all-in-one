@@ -22,9 +22,9 @@ Legend: **Net** = network from user’s browser (or server via our API). **Store
 
 | Route | Method | Purpose |
 |-------|--------|---------|
-| `/api/proxy` | POST | Forward HTTP(S) for API tester; SSRF controls + manual redirect re-checks (threat model §4.1) |
-| `/api/convert-notebook` | POST | `.ipynb` → PDF via Chromium; origin allowlist + rate limit (threat model §4.2) |
-| `/api/playground/go` | POST | Proxy Go playground compile to `go.dev` |
+| `/api/proxy` | POST | Forward HTTP(S) for API tester; SSRF + DNS resolve + production Origin (threat model §4.1) |
+| `/api/convert-notebook` | POST | `.ipynb` → PDF via Chromium; Origin + rate limit; no jupyter on serverless (§4.2) |
+| `/api/playground/go` | POST | Proxy Go compile to `go.dev`; Origin + rate limit + timeout (§4.3) |
 
 *Add rows here for every new `src/app/api/**` route.*
 
@@ -32,4 +32,4 @@ Legend: **Net** = network from user’s browser (or server via our API). **Store
 
 1. **Secrets:** Users can paste tokens into JWT, API tester, etc. We must **never log** raw bodies in application logs or analytics payloads.
 2. **Proxy:** Traffic to arbitrary URLs originates from **Vercel infrastructure**, not the user’s laptop — disclose in privacy policy / enterprise FAQ.
-3. **CSP:** Third-party domains are allowlisted in `next.config.ts`; tightening CSP is a coordinated change with ads/analytics.
+3. **CSP:** Third-party domains are allowlisted in `next.config.ts`; tightening CSP is a coordinated change with analytics.

@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { clientIp, createRateLimiter, isAllowedOrigin } from "@/lib/api-guard";
 import { logger } from "@/lib/logger";
 
 const MAX_BYTES = 96_000;
+const TIMEOUT_MS = 15_000;
+const isRateLimited = createRateLimiter(20);
 
 const PlaygroundSchema = z.object({
   code: z
@@ -24,6 +27,19 @@ function wrapGoBody(src: string): string {
  * Unique User-Agent per https://go.dev/blog/playground "Other clients".
  */
 export async function POST(request: Request) {
+  const origin = request.headers.get("origin");
+  if (!isAllowedOrigin(origin)) {
+    return NextResponse.json({ error: "Forbidden." }, { status: 403 });
+  }
+
+  const ip = clientIp(request);
+  if (isRateLimited(ip)) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded. Max 20 requests per minute." },
+      { status: 429 },
+    );
+  }
+
   let raw: unknown;
   try {
     raw = await request.json();
@@ -40,6 +56,8 @@ export async function POST(request: Request) {
   const { code } = parsed.data;
 
   const body = wrapGoBody(code);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
   let upstream: Response;
   try {
@@ -50,12 +68,19 @@ export async function POST(request: Request) {
         "User-Agent": "DevBench-Playground/1.0 (https://www.devbench.co.in/playground)",
       },
       body: JSON.stringify({ version: 2, body }),
+      signal: controller.signal,
     });
   } catch (e) {
+    clearTimeout(timer);
     const msg = e instanceof Error ? e.message : "Upstream request failed";
+    if (msg.includes("abort")) {
+      logger.warn("/api/playground/go", "Upstream timed out");
+      return NextResponse.json({ error: "Playground request timed out." }, { status: 504 });
+    }
     logger.error("/api/playground/go", "Upstream fetch failed", { error: msg });
     return NextResponse.json({ error: msg }, { status: 502 });
   }
+  clearTimeout(timer);
 
   if (!upstream.ok) {
     logger.warn("/api/playground/go", "Upstream returned non-OK", { status: upstream.status });

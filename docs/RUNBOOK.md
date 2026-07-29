@@ -70,7 +70,7 @@ Tests live in `e2e/`; config in `playwright.config.ts`. Extend smoke coverage wh
 3. **Production** — merge to default branch; Vercel promotes per project settings.
 4. **Verify after deploy**
    - Open `/`, `/json`, `/graph-calculator`, `/pdf` — smoke navigation and one primary action each.
-   - Confirm GTM/ads load only if expected (ad blockers may hide them).
+   - Confirm GTM/analytics load only if expected (ad blockers may hide them).
 
 ## Playground subdomain (`playground.devbench.co.in`)
 
