@@ -23,7 +23,8 @@
 ## Known hotspots (edit as discovered)
 
 - **Flex / full-height workspaces** — must use `shrink-0` on chrome + `flex-1 min-h-0 overflow-hidden` on main; see `docs/ARCHITECTURE.md`.
-- **`/api/proxy`** — abuse and SSRF depth; see threat model; add rate limits when traffic warrants.
+- **`/api/proxy`** — residual DNS-rebinding / open-relay risk; see threat model; prefer edge KV rate limits when traffic warrants.
+- **Notebook PDF path** — Chromium + optional jupyter remain heavy; prefer JS renderer on serverless.
 
 ## Paydown cadence
 

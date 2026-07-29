@@ -15,7 +15,9 @@ const CSP = [
   "style-src 'self' 'unsafe-inline' https://*.gstatic.com https://cdn.jsdelivr.net",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data: https://*.gstatic.com https://cdn.jsdelivr.net",
-  "connect-src 'self' https://cdn.jsdelivr.net https://esm.sh https://pypi.org https://files.pythonhosted.org https://*.google.com https://*.google https://*.googletagmanager.com https://*.doubleclick.net https://*.googlesyndication.com https://va.vercel-scripts.com https://*.vercel-insights.com https://fundingchoicesmessages.google.com https://api.producthunt.com",
+  // Tool APIs: Cloudflare DoH, ipapi/ipify, npm registry, Frankfurter FX.
+  // ws:/wss: — WebSocket tester connects to user-entered endpoints.
+  "connect-src 'self' https://cdn.jsdelivr.net https://esm.sh https://pypi.org https://files.pythonhosted.org https://*.google.com https://*.google https://*.googletagmanager.com https://*.doubleclick.net https://*.googlesyndication.com https://va.vercel-scripts.com https://*.vercel-insights.com https://fundingchoicesmessages.google.com https://api.producthunt.com https://cloudflare-dns.com https://ipapi.co https://api.ipify.org https://registry.npmjs.org https://api.npmjs.org https://api.frankfurter.app ws: wss:",
   "worker-src 'self' blob: https://cdn.jsdelivr.net",
   "frame-src 'self' https://www.googletagmanager.com https://*.doubleclick.net https://*.google.com https://*.google https://googleads.g.doubleclick.net https://fundingchoicesmessages.google.com",
   "frame-ancestors 'none'",
@@ -84,16 +86,21 @@ const nextConfig: NextConfig = {
         destination: "https://www.devbench.co.in/:path*",
         permanent: true,
       },
-      {
-        source: "/tools/json-formatter",
-        destination: "/json",
-        permanent: true,
-      },
-      {
-        source: "/tools/code-playground",
-        destination: "/playground",
-        permanent: true,
-      },
+      // Workspace tools: keep /tools/[slug] URLs working via permanent redirects.
+      // Keep in sync with TOOL_SLUG_TO_WORKSPACE in src/lib/devbench-workspaces.ts.
+      { source: "/tools/json-formatter", destination: "/json", permanent: true },
+      { source: "/tools/yaml-to-json", destination: "/yaml", permanent: true },
+      { source: "/tools/json-to-yaml", destination: "/yaml", permanent: true },
+      { source: "/tools/yaml-formatter", destination: "/yaml", permanent: true },
+      { source: "/tools/lambda-sandbox", destination: "/lambda-sandbox", permanent: true },
+      { source: "/tools/webhook-simulator", destination: "/webhook-simulator", permanent: true },
+      { source: "/tools/code-playground", destination: "/playground", permanent: true },
+      { source: "/tools/epoch", destination: "/epoch", permanent: true },
+      { source: "/tools/graph-calculator", destination: "/graph-calculator", permanent: true },
+      { source: "/tools/linux-cheatsheet", destination: "/linux-cheatsheet", permanent: true },
+      { source: "/tools/date-calculator", destination: "/date-calculator", permanent: true },
+      { source: "/tools/jwt-debugger", destination: "/jwt-debugger", permanent: true },
+      { source: "/tools/notepad-plus-plus", destination: "/notepad", permanent: true },
     ];
   },
 };

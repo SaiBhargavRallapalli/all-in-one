@@ -22,7 +22,9 @@ Legend: **Net** = network from user’s browser (or server via our API). **Store
 
 | Route | Method | Purpose |
 |-------|--------|---------|
-| `/api/proxy` | POST | Forward HTTP(S) for API tester; see threat model for SSRF controls |
+| `/api/proxy` | POST | Forward HTTP(S) for API tester; SSRF controls + manual redirect re-checks (threat model §4.1) |
+| `/api/convert-notebook` | POST | `.ipynb` → PDF via Chromium; origin allowlist + rate limit (threat model §4.2) |
+| `/api/playground/go` | POST | Proxy Go playground compile to `go.dev` |
 
 *Add rows here for every new `src/app/api/**` route.*
 
