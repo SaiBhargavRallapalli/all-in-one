@@ -52,6 +52,9 @@ const nextConfig: NextConfig = {
   // Self-contained server bundle for the macOS desktop app (see packaging/desktop).
   ...(process.env.DESKTOP_BUILD === "1" ? { output: "standalone" as const } : {}),
 
+  // isomorphic-dompurify uses jsdom on the server — keep it external to the RSC bundle.
+  serverExternalPackages: ["jsdom", "isomorphic-dompurify"],
+
   // Prevents readable source code appearing in browser DevTools on production
   productionBrowserSourceMaps: false,
 

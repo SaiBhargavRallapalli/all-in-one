@@ -1,5 +1,6 @@
 // Copyright (c) 2026 DevBench contributors. MIT License.
 import type { Result } from "./_shared";
+import { sanitizeHtml } from "@/lib/sanitize-html";
 
 export function caseConvert(input: string, targetCase: string): Result {
   const words = input.match(/[a-zA-Z0-9]+/g) || [];
@@ -221,7 +222,7 @@ export function markdownToHtml(input: string): Result {
   html = html.replace(/^- (.+)$/gm, "<li>$1</li>");
   html = html.replace(/(<li>.*<\/li>\n?)+/g, (m) => `<ul>\n${m}</ul>\n`);
   html = html.replace(/^(?!<[hulo])((?!^\s*$).+)$/gm, "<p>$1</p>");
-  return html;
+  return sanitizeHtml(html);
 }
 
 export function htmlToMarkdown(input: string): Result {

@@ -94,6 +94,7 @@ Inventory should stay minimal. Any new `app/api/**` route must be listed here wi
 ### 5.1 XSS
 
 - Prefer **React text nodes**; avoid `dangerouslySetInnerHTML` unless sanitized.
+- Notebook HTML outputs, markdown preview HTML, and Mermaid SVG go through **`isomorphic-dompurify`** (`src/lib/sanitize-html.ts`) before injection / PDF render.
 - **CSP** is defined in `next.config.ts` (allowlist for GTM, Vercel scripts, etc.). `unsafe-inline` / `unsafe-eval` are constrained by product needs (see comments in that file). Treat CSP tightening as a **tracked migration** (breaks GTM if done naively).
 
 ### 5.2 Sensitive data in URLs

@@ -1,11 +1,12 @@
 // Copyright (c) 2026 DevBench contributors. MIT License.
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { Sun, Moon, Menu, X, Search, Wrench, LayoutGrid } from "lucide-react";
 import DevBenchMark from "@/components/DevBenchMark";
 import { useExternalNavOrigin } from "@/hooks/use-external-nav-origin";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { resolveToolHref } from "@/lib/site-config";
 import {
   HEADER_NAV_LINKS,
@@ -18,6 +19,14 @@ export default function Header() {
   const [menuOpen, setMenuOpen]   = useState(false);
   const [sideNavOpen, setSideNavOpen] = useState(false);
   const { origin: navOrigin, homePath } = useExternalNavOrigin();
+  const drawerRef = useRef<HTMLElement>(null);
+  const drawerCloseRef = useRef<HTMLButtonElement>(null);
+  const closeSideNav = useCallback(() => setSideNavOpen(false), []);
+
+  useFocusTrap(sideNavOpen, drawerRef, {
+    onEscape: closeSideNav,
+    initialFocusRef: drawerCloseRef,
+  });
 
   useEffect(() => {
     // Read initial theme through a helper so setState isn't called directly in
@@ -49,15 +58,6 @@ export default function Header() {
       document.body.style.overflow = "";
     }
     return () => { document.body.style.overflow = ""; };
-  }, [sideNavOpen]);
-
-  useEffect(() => {
-    if (!sideNavOpen) return;
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") setSideNavOpen(false);
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
   }, [sideNavOpen]);
 
   function toggleTheme() {
@@ -209,14 +209,16 @@ export default function Header() {
           <div
             className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
             aria-hidden="true"
-            onClick={() => setSideNavOpen(false)}
+            onClick={closeSideNav}
           />
           {/* Panel */}
           <aside
+            ref={drawerRef}
             role="dialog"
             aria-modal="true"
             aria-label="All tools navigation"
-            className="fixed right-0 top-0 z-50 h-full w-72 max-w-[85vw] bg-background border-l border-border shadow-2xl flex flex-col"
+            tabIndex={-1}
+            className="fixed right-0 top-0 z-50 h-full w-72 max-w-[85vw] bg-background border-l border-border shadow-2xl flex flex-col outline-none"
           >
             <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
               <div className="flex items-center gap-2">
@@ -224,8 +226,9 @@ export default function Header() {
                 <span className="text-sm font-semibold text-foreground">All Tools</span>
               </div>
               <button
+                ref={drawerCloseRef}
                 type="button"
-                onClick={() => setSideNavOpen(false)}
+                onClick={closeSideNav}
                 aria-label="Close navigation"
                 className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
@@ -236,7 +239,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={() => {
-                  setSideNavOpen(false);
+                  closeSideNav();
                   window.dispatchEvent(new Event("devbench:open-palette"));
                 }}
                 className="mb-3 flex w-full items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
@@ -258,7 +261,7 @@ export default function Header() {
                           <Link
                             href={resolveToolHref(link.href, navOrigin, homePath)}
                             aria-label={link.ariaLabel}
-                            onClick={() => setSideNavOpen(false)}
+                            onClick={closeSideNav}
                             className="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                           >
                             {link.label}
@@ -271,7 +274,7 @@ export default function Header() {
               })}
               <Link
                 href="/#tools"
-                onClick={() => setSideNavOpen(false)}
+                onClick={closeSideNav}
                 className="mt-1 flex items-center rounded-lg px-3 py-2 text-sm font-semibold text-accent transition-colors hover:bg-accent/10"
               >
                 Browse all tools →

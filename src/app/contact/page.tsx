@@ -83,7 +83,7 @@ export default function ContactPage() {
   return (
     <>
       <Header />
-      <main className="mx-auto flex-1 w-full max-w-3xl px-4 py-10 sm:px-6 lg:max-w-6xl lg:px-8">
+      <main id="main" className="mx-auto flex-1 w-full max-w-3xl px-4 py-10 sm:px-6 lg:max-w-6xl lg:px-8">
         <Link
           href="/"
           className="mb-8 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
@@ -109,8 +109,11 @@ export default function ContactPage() {
 
             <div className="mt-10 space-y-5 rounded-2xl border border-border bg-card p-6 sm:p-8">
               <div>
-                <label className="mb-1.5 block text-sm font-medium">What is this about?</label>
+                <label htmlFor="contact-topic" className="mb-1.5 block text-sm font-medium">
+                  What is this about?
+                </label>
                 <select
+                  id="contact-topic"
                   value={topic}
                   onChange={(e) => setTopic(e.target.value as (typeof TOPICS)[number]["id"])}
                   className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
@@ -123,36 +126,45 @@ export default function ContactPage() {
 
               <div className="grid gap-5 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium">
+                  <label htmlFor="contact-name" className="mb-1.5 block text-sm font-medium">
                     Full name <span className="text-destructive">*</span>
                   </label>
                   <input
+                    id="contact-name"
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     autoComplete="name"
+                    required
+                    aria-invalid={formError && !name.trim() ? true : undefined}
+                    aria-describedby={formError ? "contact-form-error" : undefined}
                     className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-sm font-medium">
+                  <label htmlFor="contact-email" className="mb-1.5 block text-sm font-medium">
                     Your email <span className="text-destructive">*</span>
                   </label>
                   <input
+                    id="contact-email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     autoComplete="email"
+                    required
+                    aria-invalid={formError && (!email.trim() || formError.includes("email")) ? true : undefined}
+                    aria-describedby={formError ? "contact-form-error" : undefined}
                     className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="mb-1.5 block text-sm font-medium">
+                <label htmlFor="contact-subject-preset" className="mb-1.5 block text-sm font-medium">
                   Subject <span className="text-destructive">*</span>
                 </label>
                 <select
+                  id="contact-subject-preset"
                   value={subjectPreset}
                   onChange={(e) => setSubjectPreset(e.target.value as (typeof SUBJECT_PRESETS)[number])}
                   className="mb-3 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
@@ -161,18 +173,28 @@ export default function ContactPage() {
                     <option key={s} value={s}>{s}</option>
                   ))}
                 </select>
+                <label htmlFor="contact-subject" className="sr-only">
+                  Subject summary
+                </label>
                 <input
+                  id="contact-subject"
                   type="text"
                   value={subjectLine}
                   onChange={(e) => setSubjectLine(e.target.value)}
                   placeholder="Short summary (e.g. JWT debugger export bug)"
+                  required
+                  aria-invalid={formError && !subjectLine.trim() ? true : undefined}
+                  aria-describedby={formError ? "contact-form-error" : undefined}
                   className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
                 />
               </div>
 
               <div>
-                <label className="mb-1.5 block text-sm font-medium">Related tool (optional)</label>
+                <label htmlFor="contact-tool" className="mb-1.5 block text-sm font-medium">
+                  Related tool (optional)
+                </label>
                 <input
+                  id="contact-tool"
                   list="tool-suggestions"
                   value={toolHint}
                   onChange={(e) => setToolHint(e.target.value)}
@@ -192,22 +214,30 @@ export default function ContactPage() {
               </div>
 
               <div>
-                <label className="mb-1.5 block text-sm font-medium">
+                <label htmlFor="contact-message" className="mb-1.5 block text-sm font-medium">
                   Message <span className="text-destructive">*</span>
                 </label>
                 <textarea
+                  id="contact-message"
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   rows={8}
                   maxLength={MSG_MAX}
                   placeholder="What happened? What did you expect? For bugs: browser, OS, and steps help."
+                  required
+                  aria-invalid={formError && !message.trim() ? true : undefined}
+                  aria-describedby={formError ? "contact-form-error contact-message-count" : "contact-message-count"}
                   className="w-full resize-y rounded-xl border border-border bg-background px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring/40"
                 />
-                <p className="mt-1 text-xs text-muted-foreground">{message.length} / {MSG_MAX}</p>
+                <p id="contact-message-count" className="mt-1 text-xs text-muted-foreground">
+                  {message.length} / {MSG_MAX}
+                </p>
               </div>
 
               {formError && (
-                <p className="text-sm text-destructive" role="alert">{formError}</p>
+                <p id="contact-form-error" className="text-sm text-destructive" role="alert">
+                  {formError}
+                </p>
               )}
               {sentHint && !formError && (
                 <p className="text-sm text-emerald-700 dark:text-emerald-400" role="status">

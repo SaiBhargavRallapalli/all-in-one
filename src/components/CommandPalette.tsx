@@ -7,6 +7,7 @@ import { Search, LayoutGrid } from "lucide-react";
 import { CATEGORIES, type Tool } from "@/lib/tools-registry";
 import { filterWorkspaces, publicHrefForToolSlug, type WorkspaceShortcut } from "@/lib/devbench-workspaces";
 import { useExternalNavOrigin } from "@/hooks/use-external-nav-origin";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { resolveToolHref } from "@/lib/site-config";
 
 function toolHref(slug: string) {
@@ -22,9 +23,17 @@ export default function CommandPalette({ tools }: { tools: Tool[] }) {
   const [query, setQuery] = useState("");
   const [activeIdx, setActiveIdx] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
   const router = useRouter();
   const { origin: navOrigin, homePath } = useExternalNavOrigin();
+
+  const closePalette = useCallback(() => setOpen(false), []);
+
+  useFocusTrap(open, dialogRef, {
+    onEscape: closePalette,
+    initialFocusRef: inputRef,
+  });
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -34,7 +43,6 @@ export default function CommandPalette({ tools }: { tools: Tool[] }) {
         setQuery("");
         setActiveIdx(0);
       }
-      if (e.key === "Escape") setOpen(false);
     }
     function onOpen() {
       setOpen(true);
@@ -50,7 +58,12 @@ export default function CommandPalette({ tools }: { tools: Tool[] }) {
   }, []);
 
   useEffect(() => {
-    if (open) requestAnimationFrame(() => inputRef.current?.focus());
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
   }, [open]);
 
   // Keep active item visible when navigating with keyboard
@@ -99,7 +112,7 @@ export default function CommandPalette({ tools }: { tools: Tool[] }) {
       }
       setOpen(false);
     },
-    [navOrigin, router],
+    [navOrigin, homePath, router],
   );
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -121,14 +134,16 @@ export default function CommandPalette({ tools }: { tools: Tool[] }) {
   return (
     <div
       className="fixed inset-0 z-[100] flex items-start justify-center pt-[12vh] px-4"
-      onMouseDown={() => setOpen(false)}
+      onMouseDown={closePalette}
     >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label="Search workspaces and tools"
-        className="relative w-full max-w-xl bg-card border border-border rounded-2xl shadow-2xl overflow-hidden"
+        tabIndex={-1}
+        className="relative w-full max-w-xl bg-card border border-border rounded-2xl shadow-2xl overflow-hidden outline-none"
         onMouseDown={(e) => e.stopPropagation()}
       >
         {/* Input */}
@@ -150,6 +165,7 @@ export default function CommandPalette({ tools }: { tools: Tool[] }) {
           />
           {query && (
             <button
+              type="button"
               onClick={() => setQuery("")}
               className="text-xs text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-muted transition-colors"
             >
@@ -159,7 +175,7 @@ export default function CommandPalette({ tools }: { tools: Tool[] }) {
         </div>
 
         {/* Results */}
-        <ul ref={listRef} className="max-h-[55vh] overflow-y-auto py-1.5">
+        <ul ref={listRef} className="max-h-[55vh] overflow-y-auto py-1.5" role="listbox">
           {!query.trim() && (
             <li className="px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground select-none">
               Workspaces & tools
@@ -173,7 +189,7 @@ export default function CommandPalette({ tools }: { tools: Tool[] }) {
           ) : (
             rows.map((row, i) =>
               row.kind === "workspace" ? (
-                <li key={`w:${row.workspace.id}`}>
+                <li key={`w:${row.workspace.id}`} role="option" aria-selected={activeIdx === i}>
                   <button
                     type="button"
                     onClick={() => goToRow(row)}
@@ -195,7 +211,7 @@ export default function CommandPalette({ tools }: { tools: Tool[] }) {
                   </button>
                 </li>
               ) : (
-                <li key={`t:${row.tool.slug}`}>
+                <li key={`t:${row.tool.slug}`} role="option" aria-selected={activeIdx === i}>
                   <button
                     type="button"
                     onClick={() => goToRow(row)}

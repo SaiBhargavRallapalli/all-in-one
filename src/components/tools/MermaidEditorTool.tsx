@@ -10,36 +10,9 @@ import {
   trackToolDownload,
   trackToolCopy,
 } from "@/lib/analytics-events";
+import { sanitizeSvg } from "@/lib/sanitize-html";
 
 const TOOL_SLUG = "mermaid-editor";
-
-/**
- * Strip unsafe content from Mermaid's SVG output before injecting into the DOM.
- * Mermaid's securityLevel:'strict' is the primary guard; this is defence-in-depth.
- *
- * Handles:
- *   • <script> blocks
- *   • Inline event-handler attributes (on* — case-insensitive, single or double quotes)
- *   • javascript: / data: URI schemes in href/src/xlink:href attributes
- *   • <foreignObject> — can embed arbitrary HTML
- *   • <use> with external xlink:href references
- *   • <animate> / <set> onbegin/onend attributes (already caught by on* strip)
- */
-function sanitizeSvg(svg: string): string {
-  return svg
-    // Remove <script> blocks
-    .replace(/<script[\s\S]*?<\/script>/gi, "")
-    // Strip inline event handlers (case-insensitive, any quote style)
-    // NOTE: do NOT strip <foreignObject> — Mermaid 11 renders node text labels inside
-    // <foreignObject> elements. Removing them makes all node labels invisible.
-    .replace(/\s+on[a-z][a-z0-9]*\s*=\s*"[^"]*"/gi, "")
-    .replace(/\s+on[a-z][a-z0-9]*\s*=\s*'[^']*'/gi, "")
-    // Neutralise javascript: and data: URIs in href / xlink:href / src
-    .replace(/(href|xlink:href|src)\s*=\s*"(javascript|data):[^"]*"/gi, '$1="#"')
-    .replace(/(href|xlink:href|src)\s*=\s*'(javascript|data):[^']*'/gi, "$1='#'")
-    // Belt-and-suspenders: replace any remaining javascript: occurrences
-    .replace(/javascript\s*:/gi, "about:");
-}
 
 const EXAMPLES: { label: string; code: string }[] = [
   {

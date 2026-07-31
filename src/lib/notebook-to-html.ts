@@ -1,6 +1,8 @@
 // Shared notebook → HTML renderer used by both the client preview and the
 // server-side PDF API route (as the fallback when jupyter is not available).
 
+import { sanitizeHtml, sanitizeSvg } from "@/lib/sanitize-html";
+
 export interface NbCell {
   cell_type: "markdown" | "code" | "raw";
   source: string | string[];
@@ -49,6 +51,15 @@ export function escapeHtml(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
+/** Allow only safe URL schemes; reject attribute-breakout characters. */
+function sanitizeMdUrl(url: string): string {
+  const trimmed = url.trim();
+  if (!/^(https?:\/\/|\/|#|mailto:|data:image\/)/i.test(trimmed)) return "";
+  if (/["'<>`\s]/.test(trimmed)) return "";
+  if (/^(javascript|vbscript):/i.test(trimmed)) return "";
+  return trimmed;
+}
+
 // ─── Lightweight markdown → HTML ────────────────────────────────────────
 
 function inlineMarkdown(s: string): string {
@@ -58,11 +69,16 @@ function inlineMarkdown(s: string): string {
   html = html.replace(/\b__([^_\n]+?)__\b/g, "<strong>$1</strong>");
   html = html.replace(/(^|[\s(])\*([^*\n]+?)\*(?=[\s).,!?]|$)/g, "$1<em>$2</em>");
   html = html.replace(/(^|[\s(])_([^_\n]+?)_(?=[\s).,!?]|$)/g, "$1<em>$2</em>");
-  html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img alt="$1" src="$2">');
-  html = html.replace(
-    /\[([^\]]+)\]\(([^)]+)\)/g,
-    '<a href="$2" target="_blank" rel="noopener">$1</a>'
-  );
+  html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_m, alt, rawUrl) => {
+    const src = sanitizeMdUrl(String(rawUrl));
+    if (!src) return escapeHtml(String(alt || ""));
+    return `<img alt="${escapeHtml(String(alt))}" src="${escapeHtml(src)}">`;
+  });
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m, text, rawUrl) => {
+    const href = sanitizeMdUrl(String(rawUrl));
+    if (!href) return String(text);
+    return `<a href="${escapeHtml(href)}" target="_blank" rel="noopener">${text}</a>`;
+  });
   return html;
 }
 
@@ -166,13 +182,13 @@ function markdownToHtml(md: string): string {
 
 // ─── Sanitise raw HTML outputs ───────────────────────────────────────────
 
+/** Strip Colab chrome, then DOMPurify (scripts, handlers, javascript: URIs). */
 function sanitizeNotebookHtml(html: string): string {
-  return html
-    .replace(/<script[\s\S]*?<\/script>/gi, "")
+  const withoutColab = html
     .replace(/<div class="colab-df-buttons"[\s\S]*?<\/div>/g, "")
     .replace(/<button class="colab-df-[\s\S]*?<\/button>/g, "")
-    .replace(/<div class="colab-df-[^"]*"[\s\S]*?<\/div>/g, "")
-    .replace(/\son[a-z]+="[^"]*"/gi, "");
+    .replace(/<div class="colab-df-[^"]*"[\s\S]*?<\/div>/g, "");
+  return sanitizeHtml(withoutColab);
 }
 
 // ─── Cell → HTML ─────────────────────────────────────────────────────────
@@ -197,7 +213,7 @@ function renderOutputHtml(output: NbOutput): string {
       return `<div class="out-image"><img alt="Cell output" src="data:image/jpeg;base64,${b64}" /></div>`;
     }
     if (data["image/svg+xml"]) {
-      return `<div class="out-image">${sanitizeNotebookHtml(joinSource(data["image/svg+xml"]))}</div>`;
+      return `<div class="out-image">${sanitizeSvg(joinSource(data["image/svg+xml"]))}</div>`;
     }
     if (data["text/plain"]) {
       return `<pre class="out-text">${escapeHtml(stripAnsi(joinSource(data["text/plain"])))}</pre>`;
@@ -215,7 +231,7 @@ function renderCellHtml(cell: NbCell, opts: RenderOptions): string {
   const src = joinSource(cell.source);
 
   if (cell.cell_type === "markdown") {
-    return `<div class="cell markdown-cell">${markdownToHtml(src)}</div>`;
+    return `<div class="cell markdown-cell">${sanitizeHtml(markdownToHtml(src))}</div>`;
   }
   if (cell.cell_type === "raw") {
     return `<div class="cell raw-cell"><pre>${escapeHtml(src)}</pre></div>`;
