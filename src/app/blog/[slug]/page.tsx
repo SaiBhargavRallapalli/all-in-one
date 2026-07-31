@@ -5,6 +5,7 @@ import { ArrowLeft, Clock, Tag, ArrowRight, Wrench } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import JsonLd from "@/components/JsonLd";
+import AdSenseSlot from "@/components/ads/AdSenseSlot";
 import { BLOG_POSTS, getBlogPost } from "@/lib/blog";
 import { POST_CONTENT } from "@/components/blog/PostContent";
 import { breadcrumbSchema } from "@/lib/breadcrumb-schema";
@@ -137,6 +138,10 @@ export default async function BlogPostPage({
           {/* Article body */}
           <div className="prose-container">
             {content}
+          </div>
+
+          <div className="my-10">
+            <AdSenseSlot placement="blog" />
           </div>
 
           {/* Related tool CTA */}

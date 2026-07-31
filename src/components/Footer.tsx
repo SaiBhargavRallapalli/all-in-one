@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { Shield, ExternalLink } from "lucide-react";
 import DevBenchMark from "@/components/DevBenchMark";
+import FooterAd from "@/components/ads/FooterAd";
 import {
   footerCategoryLinks,
   getPopularTools,
@@ -16,6 +17,7 @@ export default function Footer() {
   return (
     <footer className="border-t border-border bg-background">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6">
+        <FooterAd />
 
         <div className="mb-6 pb-6 border-b border-border grid gap-8 sm:grid-cols-2">
           <div>
@@ -154,9 +156,16 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-6 border-t border-border pt-5 text-center">
+        <div className="mt-6 border-t border-border pt-5 text-center space-y-1.5">
           <p className="text-xs text-muted-foreground">
             &copy; {new Date().getFullYear()} DevBench. All rights reserved.
+          </p>
+          <p className="text-[11px] text-muted-foreground/90">
+            Free forever ·{" "}
+            <Link href="/privacy" className="underline-offset-2 hover:underline">
+              Supported by ads
+            </Link>
+            {" · "}no paywalls
           </p>
         </div>
       </div>

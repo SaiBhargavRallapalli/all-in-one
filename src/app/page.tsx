@@ -5,6 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FavoritesBar from "@/components/FavoritesBar";
 import JsonLd from "@/components/JsonLd";
+import AdSenseSlot from "@/components/ads/AdSenseSlot";
 import { FOOTER_CATEGORY_ORDER } from "@/lib/site-navigation";
 import { getCategoryHighlightTools } from "@/lib/category-navigation";
 import { toolGroupSchema } from "@/lib/tool-structured-data";
@@ -46,7 +47,7 @@ const HOMEPAGE_FAQS = [
   },
   {
     q: "Is DevBench completely free?",
-    a: "Yes. All tools on DevBench are free to use, forever. There are no paywalls, usage limits, or premium tiers.",
+    a: "Yes. All tools on DevBench are free to use, forever. There are no paywalls, usage limits, or premium tiers. Hosting is supported by non-intrusive ads — see our Privacy policy for details.",
   },
   {
     q: "Does DevBench store or upload my data?",
@@ -164,6 +165,10 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        <div className="max-w-3xl mx-auto px-4 py-6">
+          <AdSenseSlot placement="home" />
+        </div>
 
         <EngagementHome />
 
