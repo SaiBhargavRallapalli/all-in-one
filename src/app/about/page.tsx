@@ -87,6 +87,62 @@ export default async function AboutPage() {
             without installing software.
           </p>
 
+          <h2 className="text-xl font-semibold text-foreground pt-2">How we decide what to build</h2>
+          <p>
+            Every new tool has to earn its place. We ask three questions before shipping:
+            Can it run meaningfully in the browser? Does it replace a tab people already open
+            every week? And can we explain the underlying concept clearly enough that the tool
+            page is useful even if you never click a button?
+          </p>
+          <p>
+            That last point matters. Thin “paste here → get result” pages are easy to clone and
+            hard to trust. DevBench tool pages include context — what the format is for, common
+            mistakes, and when <em>not</em> to use a technique (for example treating Base64 as
+            encryption, or trusting a JWT payload without verifying the signature). The{" "}
+            <Link href="/blog" className="text-accent hover:underline">
+              guides on the blog
+            </Link>{" "}
+            go deeper when a topic needs more than a sidebar.
+          </p>
+          <p>
+            We also refuse features that would force routine secret handling through our servers.
+            If a workflow needs a network hop (CORS for the API Tester, go.dev for the Go
+            playground, ephemeral notebook conversion), we document it plainly on the tool and
+            in the{" "}
+            <Link href="/privacy" className="text-accent hover:underline">
+              privacy policy
+            </Link>
+            .
+          </p>
+
+          <h2 className="text-xl font-semibold text-foreground pt-2">
+            Privacy first, ads second
+          </h2>
+          <p>
+            DevBench is free to use. Site hosting and ongoing maintenance are supported in part
+            by Google AdSense. Ads load as a separate third-party script; they do not receive
+            the JWTs, passwords, PDFs, or JSON you paste into tools. Tool inputs stay in your
+            browser for client-side utilities. You can read the full advertising disclosure and
+            opt-out links in our{" "}
+            <Link href="/privacy" className="text-accent hover:underline">
+              privacy policy
+            </Link>
+            .
+          </p>
+          <p>
+            If an advertising partner&apos;s behaviour ever conflicted with the promise that
+            tool payloads stay local, we would rather remove the ad than break that promise.
+          </p>
+
+          <h2 className="text-xl font-semibold text-foreground pt-2">Built from India</h2>
+          <p>
+            DevBench is built and maintained in India, for a global audience of developers who
+            need dependable utilities without installers or accounts. The product name and
+            domain (devbench.co.in) reflect that origin — not a regional lock-in. The same
+            browser-first architecture works whether you are debugging an API in Bengaluru or
+            reviewing a cron schedule in Berlin.
+          </p>
+
           <h2 className="text-xl font-semibold text-foreground pt-2">The blog</h2>
           <p>
             Beyond the tools, DevBench publishes in-depth technical guides covering topics like

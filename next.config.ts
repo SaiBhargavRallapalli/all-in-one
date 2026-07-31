@@ -11,15 +11,16 @@ import withBundleAnalyzer from "@next/bundle-analyzer";
 //   - frame-ancestors 'none' blocks clickjacking site-wide.
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://www.googletagmanager.com https://*.googletagmanager.com https://*.google.com https://*.google https://*.gstatic.com https://va.vercel-scripts.com https://*.vercel-insights.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://cdn.jsdelivr.net https://www.googletagmanager.com https://*.googletagmanager.com https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.google.com https://*.google https://*.gstatic.com https://*.doubleclick.net https://va.vercel-scripts.com https://*.vercel-insights.com https://fundingchoicesmessages.google.com",
   "style-src 'self' 'unsafe-inline' https://*.gstatic.com https://cdn.jsdelivr.net",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data: https://*.gstatic.com https://cdn.jsdelivr.net",
   // Tool APIs: Cloudflare DoH, ipapi/ipify, npm registry, Frankfurter FX.
   // ws:/wss: — WebSocket tester connects to user-entered endpoints.
-  "connect-src 'self' https://cdn.jsdelivr.net https://esm.sh https://pypi.org https://files.pythonhosted.org https://*.google.com https://*.google https://*.googletagmanager.com https://va.vercel-scripts.com https://*.vercel-insights.com https://cloudflare-dns.com https://ipapi.co https://api.ipify.org https://registry.npmjs.org https://api.npmjs.org https://api.frankfurter.app ws: wss:",
+  // AdSense: googlesyndication + doubleclick + fundingchoices for consent / ad fetch.
+  "connect-src 'self' https://cdn.jsdelivr.net https://esm.sh https://pypi.org https://files.pythonhosted.org https://*.google.com https://*.google https://*.googletagmanager.com https://*.doubleclick.net https://*.googlesyndication.com https://va.vercel-scripts.com https://*.vercel-insights.com https://fundingchoicesmessages.google.com https://cloudflare-dns.com https://ipapi.co https://api.ipify.org https://registry.npmjs.org https://api.npmjs.org https://api.frankfurter.app ws: wss:",
   "worker-src 'self' blob: https://cdn.jsdelivr.net",
-  "frame-src 'self' https://www.googletagmanager.com https://*.google.com https://*.google",
+  "frame-src 'self' https://www.googletagmanager.com https://*.doubleclick.net https://*.google.com https://*.google https://googleads.g.doubleclick.net https://fundingchoicesmessages.google.com",
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self' mailto:",

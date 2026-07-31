@@ -14,6 +14,23 @@ export interface BlogPost {
 
 export const BLOG_POSTS: BlogPost[] = [
   {
+    slug: "choosing-privacy-first-online-developer-tools",
+    title: "Choosing privacy-first online developer tools (a practical checklist)",
+    date: "2026-07-31",
+    excerpt:
+      "Before you paste a JWT, API key, or customer export into a random website, run this checklist: network tab, clear disclosure of exceptions, and whether the page teaches the concept — not just dumps a result.",
+    tags: ["security", "devtools", "privacy", "web"],
+    readMinutes: 7,
+    relatedToolSlug: "jwt-debugger",
+    relatedToolLabel: "JWT Debugger",
+    relatedToolHref: "/jwt-debugger",
+    relatedBlogSlugs: [
+      "browser-code-playground-privacy",
+      "jwt-decoder-without-uploading-to-server",
+      "how-to-validate-json-online",
+    ],
+  },
+  {
     slug: "browser-code-playground-privacy",
     title: "Browser code playgrounds: what runs where (and what never leaves your tab)",
     date: "2026-05-08",

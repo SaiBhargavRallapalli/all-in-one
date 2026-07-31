@@ -3465,7 +3465,116 @@ FROM events;`}</code></pre>
   );
 }
 
+function ChoosingPrivacyFirstOnlineDeveloperTools() {
+  return (
+    <div className="space-y-4">
+      <p className={prose}>
+        Online developer tools are convenient — and often the wrong place for production secrets.
+        The problem is rarely the feature itself (decode a JWT, format JSON, merge a PDF). The
+        problem is opacity: you cannot tell whether the site is running JavaScript in your tab
+        or quietly posting your paste to a server for “processing.”
+      </p>
+      <p className={prose}>
+        This checklist is what we use when evaluating tools for DevBench, and what we recommend
+        before you trust any random converter with credentials, customer data, or unreleased
+        documents.
+      </p>
+
+      <h2 className={h2}>1. Open the Network tab before you paste anything sensitive</h2>
+      <p className={prose}>
+        In Chrome or Firefox DevTools, open the Network panel, clear it, then perform the action
+        (format, decode, hash, merge). For a true browser-only tool you should see{" "}
+        <strong>no request that carries your payload</strong> — no{" "}
+        <code className={code}>POST /api/…</code>, no WebSocket with the document body, no
+        mysterious beacon with a Base64 blob.
+      </p>
+      <p className={prose}>
+        Analytics and ad scripts may still fire on page load. That is different from uploading
+        the text you typed into the tool. If you see your JWT or JSON leave the origin, treat
+        the site as a third party with a copy of your data — regardless of what the marketing
+        copy claims.
+      </p>
+
+      <h2 className={h2}>2. Demand an honest list of network exceptions</h2>
+      <p className={prose}>
+        “100% client-side” is only trustworthy when the product also lists the features that
+        <em> do</em> leave the browser. Legitimate exceptions look like:
+      </p>
+      <ul className={ul}>
+        <li>A CORS proxy that forwards an HTTP request you explicitly send (API tester)</li>
+        <li>A webhook fire to a URL you typed</li>
+        <li>A remote compiler (for example the public Go playground) for a language that cannot run in-browser yet</li>
+        <li>An ephemeral convert endpoint that discards the upload after the response</li>
+      </ul>
+      <p className={prose}>
+        Vague claims with zero exceptions are a red flag. So is a privacy policy that never
+        mentions relays, proxies, or third-party compile APIs when the UI clearly needs them.
+      </p>
+
+      <h2 className={h2}>3. Prefer tools that teach, not only transform</h2>
+      <p className={prose}>
+        Thin pages that only offer an input box and a green “Success” badge are easy to clone
+        and hard to audit. Higher-quality tools explain the format, show common mistakes, and
+        link to deeper guides — for example when Base64 is not encryption, or when a decoded
+        JWT payload is not proof of authenticity without signature verification.
+      </p>
+      <p className={prose}>
+        If the page cannot explain <em>why</em> a result is correct, you should be sceptical of
+        the implementation quality behind the button.
+      </p>
+
+      <h2 className={h2}>4. Separate ads from your paste buffer</h2>
+      <p className={prose}>
+        Many free sites fund hosting with advertising. That can be fine — if ad scripts are
+        isolated from tool inputs. What you want to see in a privacy policy is an explicit
+        statement that advertising partners do not receive the contents of the tool forms.
+        Opt-out links (Google Ad Settings, YourAdChoices) are a good signal that the publisher
+        is not pretending ads are invisible.
+      </p>
+      <p className={prose}>
+        Affiliate bars that push unrelated products into every viewport are a different
+        problem: they rarely steal your JWT, but they are a strong hint the product is
+        optimised for clicks rather than craft.
+      </p>
+
+      <h2 className={h2}>5. A short workflow you can reuse</h2>
+      <ol className={ol}>
+        <li>Skim the privacy policy for “browser,” “client-side,” and any named exceptions.</li>
+        <li>Open DevTools → Network; clear; run a harmless sample through the tool.</li>
+        <li>If the sample leaves the tab unexpectedly, stop — do not paste real secrets.</li>
+        <li>For credentials, prefer offline CLIs or self-hosted utilities when the risk is high.</li>
+        <li>Close the tab when finished on a shared machine; clear downloads if you saved files.</li>
+      </ol>
+
+      <h2 className={h2}>How DevBench fits this checklist</h2>
+      <p className={prose}>
+        Most DevBench utilities (JWT debugger, JSON/YAML formatters, hash generators, most PDF
+        and image edits) run in your browser with Web Crypto, File APIs, and Web Workers. A
+        small set of features use short-lived relays by design — API Tester, Webhook Simulator,
+        Notebook → PDF, and the Go playground path to go.dev — and those are called out in the{" "}
+        <Link href="/privacy" className="text-accent hover:underline">
+          privacy policy
+        </Link>
+        . Site analytics and AdSense fund hosting; they are not wired to receive tool payloads.
+      </p>
+      <p className={prose}>
+        If you are evaluating us the same way you evaluate anyone else: open the Network tab on
+        the{" "}
+        <Link href="/jwt-debugger" className="text-accent hover:underline">
+          JWT Debugger
+        </Link>{" "}
+        or{" "}
+        <Link href="/json" className="text-accent hover:underline">
+          JSON toolkit
+        </Link>
+        , paste a synthetic sample, and verify the behaviour matches the documentation.
+      </p>
+    </div>
+  );
+}
+
 export const POST_CONTENT: Record<string, React.ReactNode> = {
+  "choosing-privacy-first-online-developer-tools": <ChoosingPrivacyFirstOnlineDeveloperTools />,
   "browser-code-playground-privacy": <BrowserCodePlaygroundPrivacy />,
   "how-base64-encoding-works-and-when-not-to-use-it": <Base64EncodingExplained />,
   "jwt-security-best-practices-10-things-developers-get-wrong": <JwtSecurityBestPractices />,

@@ -7,6 +7,10 @@ const TOOL_BLOG_LINKS: Record<string, { slug: string; title: string }[]> = {
     { slug: "jwt-explained", title: "JWT Explained: Header, Payload, and Signature" },
     { slug: "jwt-security-best-practices-10-things-developers-get-wrong", title: "10 JWT Security Mistakes Developers Make" },
     { slug: "jwt-decoder-without-uploading-to-server", title: "JWT Decoder Without Uploading to a Server" },
+    {
+      slug: "choosing-privacy-first-online-developer-tools",
+      title: "Choosing privacy-first online developer tools",
+    },
   ],
   "base64-encode": [
     { slug: "how-base64-encoding-works-and-when-not-to-use-it", title: "How Base64 Encoding Works (and When NOT to Use It)" },
