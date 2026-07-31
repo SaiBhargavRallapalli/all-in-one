@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ComponentType } from "react";
+import { useEffect, useRef, useState, type ComponentType } from "react";
 import type { Tool } from "@/lib/tools-registry";
 
 /** Fields the palette needs — omit unused Tool fields from the root RSC payload. */
@@ -17,7 +17,7 @@ type PaletteComponent = ComponentType<{ tools: PaletteTool[] }>;
  */
 export default function LazyCommandPalette({ tools }: { tools: PaletteTool[] }) {
   const [Palette, setPalette] = useState<PaletteComponent | null>(null);
-  const [pendingOpen, setPendingOpen] = useState(false);
+  const pendingOpenRef = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -28,7 +28,8 @@ export default function LazyCommandPalette({ tools }: { tools: PaletteTool[] }) 
     }
 
     function requestOpen() {
-      setPendingOpen(true);
+      if (Palette) return;
+      pendingOpenRef.current = true;
       void loadPalette();
     }
 
@@ -55,10 +56,10 @@ export default function LazyCommandPalette({ tools }: { tools: PaletteTool[] }) 
   }, [Palette]);
 
   useEffect(() => {
-    if (!Palette || !pendingOpen) return;
+    if (!Palette || !pendingOpenRef.current) return;
+    pendingOpenRef.current = false;
     window.dispatchEvent(new Event("devbench:open-palette"));
-    setPendingOpen(false);
-  }, [Palette, pendingOpen]);
+  }, [Palette]);
 
   if (!Palette) return null;
   return <Palette tools={tools} />;
