@@ -4,7 +4,8 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { Copy, Check, Trash2, ExternalLink } from "lucide-react";
 import { getToolBySlug } from "@/lib/tools-registry";
-import CustomToolOutlet, { CUSTOM_TOOL_SLUGS } from "@/components/tools/CustomToolOutlet";
+import CustomToolOutlet from "@/components/tools/CustomToolOutlet";
+import { CUSTOM_TOOL_SLUGS } from "@/lib/custom-tool-slugs";
 import {
   type ToolState,
   runTool,

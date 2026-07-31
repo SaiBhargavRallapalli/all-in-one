@@ -114,7 +114,7 @@ import {
   charOffsetToLineCol,
   JsonInputMirrorOverlay,
 } from "@/lib/json-workspace/brackets-mirror";
-import { validateJsonSchema, type SchemaValidationError } from "@/lib/json-schema-validate";
+import type { SchemaValidationError } from "@/lib/json-schema-validate";
 import {
   InteractiveTreeNode,
   MiniTreeNode,
@@ -332,15 +332,23 @@ export default function JsonToolkitPage({
       return;
     }
 
-    try {
-      const errs = validateJsonSchema(data, schema);
-      setSchemaErrors(errs);
-      setSchemaValid(errs.length === 0);
-    } catch (e) {
-      setSchemaErrors([{ path: "/", message: (e as Error).message }]);
-      setSchemaValid(false);
-    }
-    setSchemaValidatedAt(Date.now());
+    void import("@/lib/json-schema-validate")
+      .then(({ validateJsonSchema }) => {
+        try {
+          const errs = validateJsonSchema(data, schema);
+          setSchemaErrors(errs);
+          setSchemaValid(errs.length === 0);
+        } catch (e) {
+          setSchemaErrors([{ path: "/", message: (e as Error).message }]);
+          setSchemaValid(false);
+        }
+        setSchemaValidatedAt(Date.now());
+      })
+      .catch((e) => {
+        setSchemaErrors([{ path: "/", message: (e as Error).message }]);
+        setSchemaValid(false);
+        setSchemaValidatedAt(Date.now());
+      });
   }, [input, schemaText]);
 
   useEffect(() => {
@@ -455,11 +463,13 @@ export default function JsonToolkitPage({
         setSchemaValidatedAt(Date.now());
         return;
       }
-      if (cancelled) return;
-      const errs = validateJsonSchema(data, schema);
-      setSchemaErrors(errs);
-      setSchemaValid(errs.length === 0);
-      setSchemaValidatedAt(Date.now());
+      void import("@/lib/json-schema-validate").then(({ validateJsonSchema }) => {
+        if (cancelled) return;
+        const errs = validateJsonSchema(data, schema);
+        setSchemaErrors(errs);
+        setSchemaValid(errs.length === 0);
+        setSchemaValidatedAt(Date.now());
+      });
     }, 500);
     return () => {
       cancelled = true;

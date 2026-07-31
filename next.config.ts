@@ -68,10 +68,20 @@ const nextConfig: NextConfig = {
   turbopack: {},
 
   async headers() {
+    const immutableYear = [
+      { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+    ];
     return [
       { source: "/(.*)", headers: SECURITY_HEADERS },
       // Embed pages override the two anti-framing headers (rule applied after the general one)
       { source: "/embed/(.*)", headers: EMBED_HEADERS },
+      // Long-lived public assets
+      { source: "/pdfjs/:path*", headers: immutableYear },
+      { source: "/icon.svg", headers: immutableYear },
+      { source: "/opengraph-image", headers: [{ key: "Cache-Control", value: "public, max-age=86400" }] },
+      { source: "/manifest.webmanifest", headers: [{ key: "Cache-Control", value: "public, max-age=86400" }] },
+      // Service worker must revalidate promptly after deploys
+      { source: "/sw.js", headers: [{ key: "Cache-Control", value: "public, max-age=0, must-revalidate" }] },
     ];
   },
 

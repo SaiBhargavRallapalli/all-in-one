@@ -146,7 +146,16 @@ export default function RootLayout({
         <DevbenchClientProviders>
           {children}
         </DevbenchClientProviders>
-        <LazyCommandPalette tools={TOOLS} />
+        <LazyCommandPalette
+          tools={TOOLS.map(({ slug, name, shortName, description, category, icon }) => ({
+            slug,
+            name,
+            shortName,
+            description,
+            category,
+            icon,
+          }))}
+        />
         <ServiceWorkerRegister />
         <Analytics />
         <SpeedInsights />

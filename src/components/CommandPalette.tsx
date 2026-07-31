@@ -4,7 +4,8 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Search, LayoutGrid } from "lucide-react";
-import { CATEGORIES, type Tool } from "@/lib/tools-registry";
+import { CATEGORIES } from "@/lib/tools-registry";
+import type { PaletteTool } from "@/components/LazyCommandPalette";
 import { filterWorkspaces, publicHrefForToolSlug, type WorkspaceShortcut } from "@/lib/devbench-workspaces";
 import { useExternalNavOrigin } from "@/hooks/use-external-nav-origin";
 import { useFocusTrap } from "@/hooks/use-focus-trap";
@@ -16,9 +17,9 @@ function toolHref(slug: string) {
 
 type PaletteRow =
   | { kind: "workspace"; workspace: WorkspaceShortcut }
-  | { kind: "tool"; tool: Tool };
+  | { kind: "tool"; tool: PaletteTool };
 
-export default function CommandPalette({ tools }: { tools: Tool[] }) {
+export default function CommandPalette({ tools }: { tools: PaletteTool[] }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeIdx, setActiveIdx] = useState(0);

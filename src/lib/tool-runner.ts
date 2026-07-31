@@ -1,5 +1,6 @@
 // Copyright (c) 2026 DevBench contributors. MIT License.
 import * as engines from "@/lib/tool-engines";
+import { needsDualInput, needsNoInput } from "@/lib/tool-input-meta";
 
 export type ToolState = {
   input: string;
@@ -9,19 +10,7 @@ export type ToolState = {
   options: Record<string, string | number | boolean>;
 };
 
-export function needsDualInput(slug: string): boolean {
-  return ["text-diff", "json-diff", "semver-compare"].includes(slug);
-}
-
-export function needsNoInput(slug: string): boolean {
-  return [
-    "uuid-generator",
-    "lorem-ipsum",
-    "password-generator",
-    "timezone-converter",
-    "world-clock",
-  ].includes(slug);
-}
+export { needsDualInput, needsNoInput };
 
 export async function runTool(
   slug: string,

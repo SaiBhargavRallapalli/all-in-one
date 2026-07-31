@@ -27,8 +27,9 @@ Measured on **throttled 4G / mid-tier mobile** Lighthouse simulation unless note
 ## Product-specific rules
 
 1. **Service worker** (`public/sw.js`) — caches `/_next/static/*` only; do not expand to document/RSC without an invalidation design.
-2. **Code splitting** — prefer dynamic import for command palette and other below-the-fold heavy UI (already pattern in repo where applicable).
+2. **Code splitting** — command palette loads on first ⌘K; custom vs generic `/tools/[slug]` clients are separate; Prettier/sql-formatter and Ajv load on use; heavy custom tools use `dynamic(..., { ssr: false })`.
 3. **Images** — `loading="lazy"` / appropriate dimensions for marketing images.
+4. **Static caching** — long-lived `Cache-Control` for `/pdfjs/*` and icons in `next.config.ts`; keep `sw.js` must-revalidate.
 
 ## Process
 

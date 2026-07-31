@@ -1,28 +1,39 @@
 import dynamic from "next/dynamic";
 import type { Tool } from "@/lib/tools-registry";
+import {
+  CUSTOM_TOOL_SLUGS,
+  DATETIME_TOOL_SLUGS,
+  FINANCE_TOOL_SLUGS,
+  HEALTH_TOOL_SLUGS,
+  MATH_TOOL_SLUGS,
+} from "@/lib/custom-tool-slugs";
+
+export { CUSTOM_TOOL_SLUGS };
+
+const browserOnly = { ssr: false as const };
 
 // Each tool is its own chunk — only the visited tool's code is downloaded
-const ImageResizerTool        = dynamic(() => import("@/components/tools/ImageResizerTool"));
-const PdfPageEditorTool       = dynamic(() => import("@/components/tools/PdfPageEditorTool"));
-const MergePdfTool            = dynamic(() => import("@/components/tools/MergePdfTool"));
-const SplitPdfTool            = dynamic(() => import("@/components/tools/SplitPdfTool"));
-const CompressPdfTool         = dynamic(() => import("@/components/tools/CompressPdfTool"));
-const PdfToJpgTool            = dynamic(() => import("@/components/tools/PdfToJpgTool"));
-const RotatePdfTool           = dynamic(() => import("@/components/tools/RotatePdfTool"));
-const WatermarkPdfTool        = dynamic(() => import("@/components/tools/WatermarkPdfTool"));
-const OrganizePdfTool         = dynamic(() => import("@/components/tools/OrganizePdfTool"));
-const PdfPageNumbersTool      = dynamic(() => import("@/components/tools/PdfPageNumbersTool"));
-const PdfCompareTool          = dynamic(() => import("@/components/tools/PdfCompareTool"));
-const TextToPdfTool           = dynamic(() => import("@/components/tools/TextToPdfTool"));
-const HtmlToPdfTool           = dynamic(() => import("@/components/tools/HtmlToPdfTool"));
-const ImageToPdfTool          = dynamic(() => import("@/components/tools/ImageToPdfTool"));
+const ImageResizerTool        = dynamic(() => import("@/components/tools/ImageResizerTool"), browserOnly);
+const PdfPageEditorTool       = dynamic(() => import("@/components/tools/PdfPageEditorTool"), browserOnly);
+const MergePdfTool            = dynamic(() => import("@/components/tools/MergePdfTool"), browserOnly);
+const SplitPdfTool            = dynamic(() => import("@/components/tools/SplitPdfTool"), browserOnly);
+const CompressPdfTool         = dynamic(() => import("@/components/tools/CompressPdfTool"), browserOnly);
+const PdfToJpgTool            = dynamic(() => import("@/components/tools/PdfToJpgTool"), browserOnly);
+const RotatePdfTool           = dynamic(() => import("@/components/tools/RotatePdfTool"), browserOnly);
+const WatermarkPdfTool        = dynamic(() => import("@/components/tools/WatermarkPdfTool"), browserOnly);
+const OrganizePdfTool         = dynamic(() => import("@/components/tools/OrganizePdfTool"), browserOnly);
+const PdfPageNumbersTool      = dynamic(() => import("@/components/tools/PdfPageNumbersTool"), browserOnly);
+const PdfCompareTool          = dynamic(() => import("@/components/tools/PdfCompareTool"), browserOnly);
+const TextToPdfTool           = dynamic(() => import("@/components/tools/TextToPdfTool"), browserOnly);
+const HtmlToPdfTool           = dynamic(() => import("@/components/tools/HtmlToPdfTool"), browserOnly);
+const ImageToPdfTool          = dynamic(() => import("@/components/tools/ImageToPdfTool"), browserOnly);
 const XmlSuiteTool            = dynamic(() => import("@/components/tools/XmlSuiteTool"));
 const QrCodeTool              = dynamic(() => import("@/components/tools/QrCodeTool"));
 const AgeCalculatorTool       = dynamic(() => import("@/components/tools/AgeCalculatorTool"));
 const BmiCalculatorTool       = dynamic(() => import("@/components/tools/BmiCalculatorTool"));
 const CompoundInterestTool    = dynamic(() => import("@/components/tools/CompoundInterestTool"));
 const LoanEmiTool             = dynamic(() => import("@/components/tools/LoanEmiTool"));
-const ImageCompressorTool     = dynamic(() => import("@/components/tools/ImageCompressorTool"));
+const ImageCompressorTool     = dynamic(() => import("@/components/tools/ImageCompressorTool"), browserOnly);
 const ContrastCheckerTool     = dynamic(() => import("@/components/tools/ContrastCheckerTool"));
 const GradientGeneratorTool   = dynamic(() => import("@/components/tools/GradientGeneratorTool"));
 const CurrencyConverterTool   = dynamic(() => import("@/components/tools/CurrencyConverterTool"));
@@ -30,25 +41,25 @@ const FinanceFormTools        = dynamic(() => import("@/components/tools/Finance
 const HealthFormTools         = dynamic(() => import("@/components/tools/HealthFormTools"));
 const MathFormTools           = dynamic(() => import("@/components/tools/MathFormTools"));
 const DateTimeFormTools       = dynamic(() => import("@/components/tools/DateTimeFormTools"));
-const BackgroundRemoverTool   = dynamic(() => import("@/components/tools/BackgroundRemoverTool"));
+const BackgroundRemoverTool   = dynamic(() => import("@/components/tools/BackgroundRemoverTool"), browserOnly);
 const HtmlPreviewTool         = dynamic(() => import("@/components/tools/HtmlPreviewTool"));
-const Base64ImageTool         = dynamic(() => import("@/components/tools/Base64ImageTool"));
+const Base64ImageTool         = dynamic(() => import("@/components/tools/Base64ImageTool"), browserOnly);
 const StringInspectorTool     = dynamic(() => import("@/components/tools/StringInspectorTool"));
 const MarkdownPreviewTool     = dynamic(() => import("@/components/tools/MarkdownPreviewTool"));
 const RegexTesterTool         = dynamic(() => import("@/components/tools/RegexTesterTool"));
 const UuidGeneratorTool       = dynamic(() => import("@/components/tools/UuidGeneratorTool"));
 const HttpStatusReferenceTool = dynamic(() => import("@/components/tools/HttpStatusReferenceTool"));
 const CssBoxShadowTool        = dynamic(() => import("@/components/tools/CssBoxShadowTool"));
-const ImageFormatConverterTool = dynamic(() => import("@/components/tools/ImageFormatConverterTool"));
-const ImageMergerTool           = dynamic(() => import("@/components/tools/ImageMergerTool"));
-const SvgOptimizerTool        = dynamic(() => import("@/components/tools/SvgOptimizerTool"));
-const ExifViewerTool          = dynamic(() => import("@/components/tools/ExifViewerTool"));
+const ImageFormatConverterTool = dynamic(() => import("@/components/tools/ImageFormatConverterTool"), browserOnly);
+const ImageMergerTool           = dynamic(() => import("@/components/tools/ImageMergerTool"), browserOnly);
+const SvgOptimizerTool        = dynamic(() => import("@/components/tools/SvgOptimizerTool"), browserOnly);
+const ExifViewerTool          = dynamic(() => import("@/components/tools/ExifViewerTool"), browserOnly);
 const UnicodeCheckerTool      = dynamic(() => import("@/components/tools/UnicodeCheckerTool"));
-const NotepadPlusPlusTool     = dynamic(() => import("@/components/tools/NotepadPlusPlusTool"));
-const MermaidEditorTool       = dynamic(() => import("@/components/tools/MermaidEditorTool"));
+const NotepadPlusPlusTool     = dynamic(() => import("@/components/tools/NotepadPlusPlusTool"), browserOnly);
+const MermaidEditorTool       = dynamic(() => import("@/components/tools/MermaidEditorTool"), browserOnly);
 const TimezoneConverterTool   = dynamic(() => import("@/components/tools/TimezoneConverterTool"));
-const WebSocketTesterTool     = dynamic(() => import("@/components/tools/WebSocketTesterTool"));
-const IpynbToPdfTool          = dynamic(() => import("@/components/tools/IpynbToPdfTool"));
+const WebSocketTesterTool     = dynamic(() => import("@/components/tools/WebSocketTesterTool"), browserOnly);
+const IpynbToPdfTool          = dynamic(() => import("@/components/tools/IpynbToPdfTool"), browserOnly);
 const GitignoreGeneratorTool  = dynamic(() => import("@/components/tools/GitignoreGeneratorTool"));
 const LicenseGeneratorTool    = dynamic(() => import("@/components/tools/LicenseGeneratorTool"));
 const EnvValidatorTool        = dynamic(() => import("@/components/tools/EnvValidatorTool"));
@@ -58,53 +69,13 @@ const NpmCompareTool          = dynamic(() => import("@/components/tools/NpmComp
 const ColorConverterTool      = dynamic(() => import("@/components/tools/ColorConverterTool"));
 const ColorPaletteTool        = dynamic(() => import("@/components/tools/ColorPaletteTool"));
 const ExpenseSplitterTool     = dynamic(() => import("@/components/tools/ExpenseSplitterTool"));
-const VideoConverterTool      = dynamic(() => import("@/components/tools/VideoConverterTool"));
-
-const FINANCE_SLUGS = new Set([
-  "simple-interest", "gst-calculator", "discount-calculator",
-  "tip-calculator", "roi-calculator", "profit-loss-calculator",
-  "salary-hike-calculator",
-]);
-const HEALTH_SLUGS = new Set([
-  "bmr-calculator", "calorie-calculator",
-  "water-intake-calculator", "body-fat-calculator",
-]);
-const MATH_SLUGS = new Set([
-  "quadratic-solver", "pythagorean-theorem", "gcd-lcm-calculator",
-]);
-const DATETIME_SLUGS = new Set([
-  "days-between-dates", "countdown-calculator",
-  "week-number-calculator", "due-date-calculator",
-]);
-
-// Single source of truth — page.tsx imports this instead of maintaining its own copy.
-export const CUSTOM_TOOL_SLUGS: ReadonlySet<string> = new Set([
-  ...FINANCE_SLUGS,
-  ...HEALTH_SLUGS,
-  ...MATH_SLUGS,
-  ...DATETIME_SLUGS,
-  "background-remover", "image-resizer", "image-compressor", "image-merger",
-  "pdf-page-editor", "merge-pdf", "split-pdf", "compress-pdf",
-  "pdf-to-jpg", "rotate-pdf", "watermark-pdf", "organize-pdf",
-  "pdf-page-numbers", "pdf-compare", "image-to-pdf", "text-to-pdf",
-  "html-to-pdf", "xml-suite", "qr-code", "age-calculator",
-  "bmi-calculator", "compound-interest", "loan-emi-calculator",
-  "contrast-checker", "gradient-generator", "currency-converter",
-  "html-preview", "base64-image", "string-inspector", "markdown-preview",
-  "regex-tester", "uuid-generator", "http-status-reference", "css-box-shadow",
-  "image-format-converter", "image-merger", "svg-optimizer", "exif-viewer", "unicode-checker",
-  "mermaid-editor", "timezone-converter", "websocket-tester", "ipynb-to-pdf",
-  "gitignore-generator", "license-generator", "env-validator",
-  "dns-lookup", "ip-info", "npm-compare", "color-converter", "color-palette",
-  "notepad-plus-plus", "expense-splitter",
-  "video-converter", "gif-maker",
-]);
+const VideoConverterTool      = dynamic(() => import("@/components/tools/VideoConverterTool"), browserOnly);
 
 export default function CustomToolOutlet({ slug, tool }: { slug: string; tool: Tool }) {
-  if (FINANCE_SLUGS.has(slug))  return <FinanceFormTools tool={tool} />;
-  if (HEALTH_SLUGS.has(slug))   return <HealthFormTools tool={tool} />;
-  if (MATH_SLUGS.has(slug))     return <MathFormTools tool={tool} />;
-  if (DATETIME_SLUGS.has(slug)) return <DateTimeFormTools tool={tool} />;
+  if (FINANCE_TOOL_SLUGS.has(slug))  return <FinanceFormTools tool={tool} />;
+  if (HEALTH_TOOL_SLUGS.has(slug))   return <HealthFormTools tool={tool} />;
+  if (MATH_TOOL_SLUGS.has(slug))     return <MathFormTools tool={tool} />;
+  if (DATETIME_TOOL_SLUGS.has(slug)) return <DateTimeFormTools tool={tool} />;
 
   switch (slug) {
     case "background-remover":       return <BackgroundRemoverTool tool={tool} />;

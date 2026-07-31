@@ -1,15 +1,4 @@
 // Copyright (c) 2026 DevBench contributors. MIT License.
-import * as prettier from "prettier/standalone";
-import * as estreePlugin from "prettier/plugins/estree";
-import * as babelPlugin from "prettier/plugins/babel";
-import * as htmlPlugin from "prettier/plugins/html";
-import * as postcssPlugin from "prettier/plugins/postcss";
-import * as typescriptPlugin from "prettier/plugins/typescript";
-import * as markdownPlugin from "prettier/plugins/markdown";
-import * as yamlPlugin from "prettier/plugins/yaml";
-import * as graphqlPlugin from "prettier/plugins/graphql";
-import { format as formatSql } from "sql-formatter";
-
 export type BeautifierLang =
   | "html"
   | "css"
@@ -86,6 +75,42 @@ const PRETTIER_BASE = {
   trailingComma: "es5" as const,
 };
 
+async function loadPrettier() {
+  const [
+    prettier,
+    estreePlugin,
+    babelPlugin,
+    htmlPlugin,
+    postcssPlugin,
+    typescriptPlugin,
+    markdownPlugin,
+    yamlPlugin,
+    graphqlPlugin,
+  ] = await Promise.all([
+    import("prettier/standalone"),
+    import("prettier/plugins/estree"),
+    import("prettier/plugins/babel"),
+    import("prettier/plugins/html"),
+    import("prettier/plugins/postcss"),
+    import("prettier/plugins/typescript"),
+    import("prettier/plugins/markdown"),
+    import("prettier/plugins/yaml"),
+    import("prettier/plugins/graphql"),
+  ]);
+  return {
+    prettier,
+    estreePlugin,
+    babelPlugin,
+    htmlPlugin,
+    postcssPlugin,
+    typescriptPlugin,
+    markdownPlugin,
+    yamlPlugin,
+    graphqlPlugin,
+  };
+}
+
+
 export async function beautifyCode(
   lang: BeautifierLang,
   source: string
@@ -98,6 +123,7 @@ export async function beautifyCode(
     }
 
     if (lang === "sql") {
+      const { format: formatSql } = await import("sql-formatter");
       const out = formatSql(input, {
         language: "sql",
         keywordCase: "upper",
@@ -105,6 +131,18 @@ export async function beautifyCode(
       });
       return { ok: true, output: out.endsWith("\n") ? out : `${out}\n` };
     }
+
+    const {
+      prettier,
+      estreePlugin,
+      babelPlugin,
+      htmlPlugin,
+      postcssPlugin,
+      typescriptPlugin,
+      markdownPlugin,
+      yamlPlugin,
+      graphqlPlugin,
+    } = await loadPrettier();
 
     switch (lang) {
       case "html":
