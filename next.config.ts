@@ -53,8 +53,10 @@ const nextConfig: NextConfig = {
   // Self-contained server bundle for the macOS desktop app (see packaging/desktop).
   ...(process.env.DESKTOP_BUILD === "1" ? { output: "standalone" as const } : {}),
 
-  // isomorphic-dompurify uses jsdom on the server — keep it external to the RSC bundle.
-  serverExternalPackages: ["jsdom", "isomorphic-dompurify"],
+  // jsdom / Chromium must stay external (native / large binaries).
+  // Do NOT externalize isomorphic-dompurify — on Vercel, requiring it as an
+  // external hits ERR_REQUIRE_ESM via @exodus/bytes and breaks /api/convert-notebook.
+  serverExternalPackages: ["jsdom", "@sparticuz/chromium", "puppeteer-core"],
 
   // Prevents readable source code appearing in browser DevTools on production
   productionBrowserSourceMaps: false,

@@ -24,7 +24,7 @@
 
 - **Flex / full-height workspaces** — must use `shrink-0` on chrome + `flex-1 min-h-0 overflow-hidden` on main; see `docs/ARCHITECTURE.md`.
 - **`/api/proxy`** — DNS resolve + production Origin now enforced; residual risk is split-horizon / public-looking internal hosts. **Edge/KV rate limits** need Vercel KV (or similar) setup — skip until traffic warrants platform wiring.
-- **Notebook PDF path** — Chromium remains heavy on serverless; jupyter spawn is skipped on Vercel (JS renderer only).
+- **Notebook PDF path** — Download tries Chromium on `/api/convert-notebook` then falls back to client `pdf-lib` (`notebook-to-pdf`). Jupyter spawn is skipped on Vercel; notebook HTML uses lite sanitizer (not isomorphic-dompurify) to avoid serverless ESM crashes.
 - **CSP tightening** (`unsafe-inline` / broad `*.google*`) — still gated on GTM migration; ad domains already removed.
 
 ## Paydown cadence

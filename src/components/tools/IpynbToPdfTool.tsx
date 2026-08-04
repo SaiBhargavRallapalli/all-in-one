@@ -23,9 +23,10 @@ import {
 } from "@/lib/analytics-events";
 import {
   type Notebook,
-  type RenderOptions,
   notebookToHtml,
 } from "@/lib/notebook-to-html";
+import { notebookToPdf } from "@/lib/notebook-to-pdf";
+import { downloadUint8 } from "@/lib/pdf-download";
 
 const TOOL_SLUG = "ipynb-to-pdf";
 
@@ -168,36 +169,48 @@ export default function IpynbToPdfTool({ tool }: { tool: Tool }) {
     setIsConverting(true);
     setConversionError("");
 
-    // Use the real uploaded file, or serialise the sample notebook on the fly
+    const outName = `${(docTitle || file?.name.replace(/\.ipynb$/i, "") || "notebook").replace(
+      /[/\\?%*:|"<>]/g,
+      "_",
+    )}.pdf`;
+
+    // 1) Prefer server Chromium when it works (full HTML fidelity + scale).
+    // 2) Always fall back to client pdf-lib so Download never dead-ends on
+    //    serverless (jupyter skipped; isomorphic-dompurify/Chromium can fail).
     const fileToSend: File = file
       ? file
       : new File(
           [JSON.stringify(SAMPLE_NOTEBOOK, null, 2)],
           "sample-notebook.ipynb",
-          { type: "application/json" }
+          { type: "application/json" },
         );
 
     try {
-      const form = new FormData();
-      form.append("file", fileToSend);
-      form.append("scale", String(scale));
-
-      const res = await fetch("/api/convert-notebook", { method: "POST", body: form });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error((data as { error?: string }).error ?? `Server error ${res.status}`);
+      try {
+        const form = new FormData();
+        form.append("file", fileToSend);
+        form.append("scale", String(scale));
+        const res = await fetch("/api/convert-notebook", { method: "POST", body: form });
+        if (res.ok) {
+          const buf = new Uint8Array(await res.arrayBuffer());
+          if (buf.byteLength > 4 && String.fromCharCode(buf[0], buf[1], buf[2], buf[3]) === "%PDF") {
+            downloadUint8(buf, outName, "application/pdf", TOOL_SLUG);
+            trackToolSuccess(TOOL_SLUG, "download_pdf", { scale, via: "server" });
+            return;
+          }
+        }
+      } catch {
+        /* fall through to client */
       }
 
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileToSend.name.replace(/\.ipynb$/i, ".pdf");
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      trackToolSuccess(TOOL_SLUG, "download_pdf", { scale });
+      const bytes = await notebookToPdf(notebook, {
+        includeCodeCells,
+        includeOutputs,
+        scale,
+        title: docTitle || "Notebook",
+      });
+      downloadUint8(bytes, outName, "application/pdf", TOOL_SLUG);
+      trackToolSuccess(TOOL_SLUG, "download_pdf", { scale, via: "client" });
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Conversion failed.";
       setConversionError(msg);
@@ -205,7 +218,7 @@ export default function IpynbToPdfTool({ tool }: { tool: Tool }) {
     } finally {
       setIsConverting(false);
     }
-  }, [notebook, file, scale]);
+  }, [notebook, file, scale, docTitle, includeCodeCells, includeOutputs]);
 
   const copyHtml = useCallback(() => {
     if (!html) return;
@@ -465,18 +478,17 @@ export default function IpynbToPdfTool({ tool }: { tool: Tool }) {
           {conversionError && (
             <div className="mx-4 mb-3 rounded-lg border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs text-destructive" role="alert">
               <strong>Download failed:</strong> {conversionError}
-              {conversionError.includes("jupyter") && (
-                <span className="block mt-1 text-muted-foreground">
-                  This server does not have Jupyter installed. Use <strong>Print</strong> to save via your browser instead.
-                </span>
-              )}
+              <span className="block mt-1 text-muted-foreground">
+                You can still use <strong>Print</strong> → Save as PDF for full HTML fidelity (tables, SVG).
+              </span>
             </div>
           )}
 
           {/* Info note */}
           <div className="border-t border-border bg-accent/5 px-5 py-3 text-xs text-foreground/80">
-            <strong>Download PDF</strong> uses Puppeteer on the server with the scale you set.
-            {" "}<strong>Print</strong> opens the browser print dialog — choose &quot;Save as PDF&quot; there.
+            <strong>Download PDF</strong> tries the server converter first, then builds a PDF in your browser
+            (markdown, code, text outputs, PNG/JPEG). Scale applies to both paths.
+            {" "}<strong>Print</strong> opens the browser print dialog for the highest-fidelity HTML preview.
           </div>
         </section>
       )}

@@ -23,7 +23,7 @@ Legend: **Net** = network from user’s browser (or server via our API). **Store
 | Route | Method | Purpose |
 |-------|--------|---------|
 | `/api/proxy` | POST | Forward HTTP(S) for API tester; SSRF + DNS resolve + production Origin (threat model §4.1) |
-| `/api/convert-notebook` | POST | `.ipynb` → PDF via Chromium; Origin + rate limit; no jupyter on serverless (§4.2) |
+| `/api/convert-notebook` | POST | `.ipynb` → PDF via Chromium (client `pdf-lib` fallback in UI); Origin + rate limit; no jupyter on serverless; lite HTML sanitize (§4.2) |
 | `/api/playground/go` | POST | Proxy Go compile to `go.dev`; Origin + rate limit + timeout (§4.3) |
 
 *Add rows here for every new `src/app/api/**` route.*

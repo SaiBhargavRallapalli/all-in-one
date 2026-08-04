@@ -1,7 +1,7 @@
 // Shared notebook → HTML renderer used by both the client preview and the
 // server-side PDF API route (as the fallback when jupyter is not available).
 
-import { sanitizeHtml, sanitizeSvg } from "@/lib/sanitize-html";
+import { sanitizeHtmlLite as sanitizeHtml, sanitizeSvgLite as sanitizeSvg } from "@/lib/sanitize-html-lite";
 
 export interface NbCell {
   cell_type: "markdown" | "code" | "raw";
@@ -182,7 +182,7 @@ function markdownToHtml(md: string): string {
 
 // ─── Sanitise raw HTML outputs ───────────────────────────────────────────
 
-/** Strip Colab chrome, then DOMPurify (scripts, handlers, javascript: URIs). */
+/** Strip Colab chrome, then lite-sanitize (scripts, handlers, javascript: URIs). */
 function sanitizeNotebookHtml(html: string): string {
   const withoutColab = html
     .replace(/<div class="colab-df-buttons"[\s\S]*?<\/div>/g, "")

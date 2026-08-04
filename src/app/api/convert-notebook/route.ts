@@ -8,6 +8,10 @@ import { randomBytes } from "crypto";
 import { notebookToHtml, type Notebook } from "@/lib/notebook-to-html";
 import { clientIp, createRateLimiter, isAllowedOrigin } from "@/lib/api-guard";
 
+export const runtime = "nodejs";
+/** Chromium PDF needs headroom on serverless (Hobby default is often too short). */
+export const maxDuration = 60;
+
 const execAsync = promisify(exec);
 
 const MAX_FILE_BYTES = 50 * 1024 * 1024;
@@ -40,7 +44,7 @@ export function parseNotebookJson(raw: string): Notebook | null {
 }
 
 /** Skip jupyter on serverless — it isn't installed and only wastes spawn time. */
-function shouldTryJupyter(): boolean {
+export function shouldTryJupyter(): boolean {
   if (process.env.DEVBENCH_SKIP_JUPYTER === "1") return false;
   if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME) return false;
   return true;

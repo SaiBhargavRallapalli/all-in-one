@@ -73,9 +73,9 @@ Third parties loaded in the browser (scripts, frames, beacons) are a **separate 
 
 ### 4.2 `POST /api/convert-notebook`
 
-**Purpose:** Convert uploaded `.ipynb` notebooks to PDF (Chromium; optional jupyter nbconvert on non-serverless hosts).
+**Purpose:** Convert uploaded `.ipynb` notebooks to PDF (Chromium; optional jupyter nbconvert on non-serverless hosts). The tool UI also falls back to client-side `pdf-lib` when this route fails.
 
-**Controls (current):** Origin allowlist (null rejected in production), 5 req/min per IP, 50 MB upload cap, sanitized `Content-Disposition` filename, minimal notebook JSON shape check before Chromium, **jupyter spawn skipped on Vercel/serverless**.
+**Controls (current):** Origin allowlist (null rejected in production), 5 req/min per IP, 50 MB upload cap, sanitized `Content-Disposition` filename, minimal notebook JSON shape check before Chromium, **jupyter spawn skipped on Vercel/serverless**, notebook HTML via lite sanitizer (avoids isomorphic-dompurify ESM crash on serverless).
 
 ### 4.3 `POST /api/playground/go`
 
@@ -94,7 +94,7 @@ Inventory should stay minimal. Any new `app/api/**` route must be listed here wi
 ### 5.1 XSS
 
 - Prefer **React text nodes**; avoid `dangerouslySetInnerHTML` unless sanitized.
-- Notebook HTML outputs, markdown preview HTML, and Mermaid SVG go through **`isomorphic-dompurify`** (`src/lib/sanitize-html.ts`) before injection / PDF render.
+- Notebook HTML outputs use **`sanitize-html-lite`** in `notebook-to-html` (serverless-safe); markdown preview HTML and Mermaid SVG go through **`isomorphic-dompurify`** (`src/lib/sanitize-html.ts`) before injection.
 - **CSP** is defined in `next.config.ts` (allowlist for GTM, Vercel scripts, etc.). `unsafe-inline` / `unsafe-eval` are constrained by product needs (see comments in that file). Treat CSP tightening as a **tracked migration** (breaks GTM if done naively).
 
 ### 5.2 Sensitive data in URLs
