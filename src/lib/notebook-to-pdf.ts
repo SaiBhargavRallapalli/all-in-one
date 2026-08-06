@@ -15,6 +15,37 @@ import {
 const A4_W = 595.28;
 const A4_H = 841.89;
 
+/**
+ * Extra Unicode code points mapped by WinAnsi / Windows-1252 (beyond U+00A0–U+00FF).
+ * StandardFonts (Helvetica, Courier, …) use this encoding and throw on anything else.
+ */
+const WIN_ANSI_EXTRAS = new Set<number>([
+  0x20ac, 0x201a, 0x0192, 0x201e, 0x2026, 0x2020, 0x2021, 0x02c6, 0x2030, 0x0160,
+  0x2039, 0x0152, 0x017d, 0x2018, 0x2019, 0x201c, 0x201d, 0x2022, 0x2013, 0x2014,
+  0x02dc, 0x2122, 0x0161, 0x203a, 0x0153, 0x017e, 0x0178,
+]);
+
+function isWinAnsiCodePoint(cp: number): boolean {
+  if (cp === 0x09 || cp === 0x0a || cp === 0x0d) return true;
+  if (cp >= 0x20 && cp <= 0x7e) return true;
+  if (cp >= 0xa0 && cp <= 0xff) return true;
+  return WIN_ANSI_EXTRAS.has(cp);
+}
+
+/**
+ * Replace characters that pdf-lib StandardFonts cannot encode (emoji, CJK, etc.)
+ * so `drawText` / `widthOfTextAtSize` never throw `WinAnsi cannot encode`.
+ */
+export function toWinAnsiSafe(text: string, replacement = "?"): string {
+  const normalized = text.normalize("NFKC");
+  let out = "";
+  for (const ch of normalized) {
+    const cp = ch.codePointAt(0)!;
+    out += isWinAnsiCodePoint(cp) ? ch : replacement;
+  }
+  return out;
+}
+
 export interface NotebookPdfOptions extends RenderOptions {
   /** 0.5–1.0 — scales fonts/margins similarly to the Puppeteer scale slider. */
   scale?: number;
@@ -209,8 +240,9 @@ export async function notebookToPdf(
     gap: number,
     color = rgb(0.1, 0.1, 0.1),
   ) => {
+    const safe = toWinAnsiSafe(text);
     const measure = (s: string) => useFont.widthOfTextAtSize(s, size);
-    const paragraphs = text.replace(/\r\n/g, "\n").split("\n");
+    const paragraphs = safe.replace(/\r\n/g, "\n").split("\n");
     for (const para of paragraphs) {
       const lines = wrapLine(para, measure, maxW);
       for (const line of lines) {
@@ -231,7 +263,7 @@ export async function notebookToPdf(
 
   // Title
   ensureSpace(titleSize + 8);
-  page.drawText(title.slice(0, 120), {
+  page.drawText(toWinAnsiSafe(title.slice(0, 120)), {
     x: margin,
     y: y - titleSize,
     size: titleSize,
@@ -253,7 +285,7 @@ export async function notebookToPdf(
     for (const part of parts) {
       if (part.label) {
         ensureSpace(lineGap);
-        page.drawText(part.label, {
+        page.drawText(toWinAnsiSafe(part.label), {
           x: margin,
           y: y - fontSize,
           size: fontSize * 0.85,
@@ -294,7 +326,7 @@ export async function notebookToPdf(
   }
 
   // Footer on last page
-  page.drawText("Rendered by DevBench · client PDF", {
+  page.drawText(toWinAnsiSafe("Rendered by DevBench · client PDF"), {
     x: margin,
     y: 24,
     size: 8,

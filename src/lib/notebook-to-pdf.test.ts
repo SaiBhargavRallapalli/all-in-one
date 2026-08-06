@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import { htmlToPlainText, notebookToPdf } from "./notebook-to-pdf";
+import { htmlToPlainText, notebookToPdf, toWinAnsiSafe } from "./notebook-to-pdf";
 import type { Notebook } from "./notebook-to-html";
 
 describe("htmlToPlainText", () => {
@@ -15,6 +15,20 @@ describe("htmlToPlainText", () => {
     expect(t).toContain("a");
     expect(t).toContain("b");
     expect(t).toContain("c");
+  });
+});
+
+describe("toWinAnsiSafe", () => {
+  it("keeps ASCII and common WinAnsi punctuation", () => {
+    // NFKC may expand compatibility chars (e.g. … → ...); keep euro / em dash.
+    expect(toWinAnsiSafe("Hello — café €")).toBe("Hello — café €");
+    expect(toWinAnsiSafe("world…")).toBe("world...");
+  });
+
+  it("replaces emoji and non-WinAnsi code points", () => {
+    // U+1F3CF cricket bat — the reported download failure
+    expect(toWinAnsiSafe("Score 🏏 end")).toBe("Score ? end");
+    expect(toWinAnsiSafe("你好")).toBe("??");
   });
 });
 
@@ -96,6 +110,47 @@ describe("notebookToPdf", () => {
       title: "Img",
     });
     expect(bytes.byteLength).toBeGreaterThan(800);
+    expect(String.fromCharCode(...bytes.slice(0, 5))).toBe("%PDF-");
+  });
+
+  it("succeeds when markdown/code/outputs contain emoji and non-WinAnsi chars", async () => {
+    const nb: Notebook = {
+      metadata: { kernelspec: { display_name: "Python 3 🐍", name: "python3" } },
+      cells: [
+        { cell_type: "markdown", source: "# Match day 🏏\n\n你好 — café" },
+        {
+          cell_type: "code",
+          execution_count: 1,
+          source: 'print("winner 🏆")',
+          outputs: [
+            {
+              output_type: "stream",
+              name: "stdout",
+              text: "winner 🏆\n",
+            },
+            {
+              output_type: "execute_result",
+              data: { "text/plain": "日本語 output ✨" },
+            },
+          ],
+        },
+      ],
+    };
+    await expect(
+      notebookToPdf(nb, {
+        includeCodeCells: true,
+        includeOutputs: true,
+        title: "Emoji 🏏 Notebook",
+        scale: 0.75,
+      }),
+    ).resolves.toBeInstanceOf(Uint8Array);
+
+    const bytes = await notebookToPdf(nb, {
+      includeCodeCells: true,
+      includeOutputs: true,
+      title: "Emoji 🏏 Notebook",
+    });
+    expect(bytes.byteLength).toBeGreaterThan(500);
     expect(String.fromCharCode(...bytes.slice(0, 5))).toBe("%PDF-");
   });
 });
