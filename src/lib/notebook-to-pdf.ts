@@ -83,13 +83,17 @@ function stripAnsi(s: string): string {
 }
 
 function markdownToPlain(md: string): string {
-  return md
+  // Strip raw HTML to text first (Jupyter markdown often embeds HTML banners/tables).
+  // Leaving tags visible was the main "PDF looks broken" failure mode.
+  const noHtml = htmlToPlainText(md);
+  return noHtml
     .replace(/^#{1,6}\s+/gm, "")
     .replace(/\*\*([^*]+)\*\*/g, "$1")
     .replace(/\*([^*]+)\*/g, "$1")
     .replace(/`([^`]+)`/g, "$1")
     .replace(/!\[[^\]]*\]\([^)]+\)/g, "")
     .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/[ \t]{2,}/g, " ")
     .trim();
 }
 

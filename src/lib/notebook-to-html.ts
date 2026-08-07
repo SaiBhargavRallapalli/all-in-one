@@ -159,6 +159,18 @@ function markdownToHtml(md: string): string {
       continue;
     }
 
+    // Jupyter markdown allows raw HTML blocks — pass through (sanitized),
+    // do not escape into visible "&lt;div …&gt;" text.
+    if (/^\s*<\/?[a-zA-Z!]/.test(line)) {
+      const htmlLines: string[] = [];
+      while (i < lines.length && lines[i].trim() !== "") {
+        htmlLines.push(lines[i]);
+        i++;
+      }
+      out.push(sanitizeHtml(htmlLines.join("\n")));
+      continue;
+    }
+
     if (!line.trim()) {
       i++;
       continue;
@@ -169,7 +181,7 @@ function markdownToHtml(md: string): string {
     while (
       i < lines.length &&
       lines[i].trim() &&
-      !/^(#{1,6})\s+|^```|^\s*[-*+]\s+|^\s*\d+\.\s+|^>\s?/.test(lines[i])
+      !/^(#{1,6})\s+|^```|^\s*[-*+]\s+|^\s*\d+\.\s+|^>\s?|^\s*<\/?[a-zA-Z!]/.test(lines[i])
     ) {
       paraLines.push(lines[i]);
       i++;

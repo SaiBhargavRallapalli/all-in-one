@@ -65,4 +65,24 @@ describe("notebookToHtml sanitization", () => {
     const html = notebookToHtml(nb, "test", { includeCodeCells: true, includeOutputs: true });
     expect(html).toContain('<img alt="chart" src="https://example.com/a.png">');
   });
+
+  it("passes through sanitized raw HTML blocks in markdown (Jupyter-style)", () => {
+    const nb: Notebook = {
+      cells: [
+        {
+          cell_type: "markdown",
+          source: [
+            "# Title\n\n",
+            '<div style="background-color: #1e3a8a; color: white; padding: 20px;">\n',
+            "<h2>Position: Senior Data Scientist</h2>\n",
+            "</div>\n",
+          ],
+        },
+      ],
+    };
+    const html = notebookToHtml(nb, "test", { includeCodeCells: true, includeOutputs: true });
+    expect(html).toContain('style="background-color: #1e3a8a; color: white; padding: 20px;"');
+    expect(html).toContain("<h2>Position: Senior Data Scientist</h2>");
+    expect(html).not.toContain("&lt;div");
+  });
 });

@@ -153,4 +153,23 @@ describe("notebookToPdf", () => {
     expect(bytes.byteLength).toBeGreaterThan(500);
     expect(String.fromCharCode(...bytes.slice(0, 5))).toBe("%PDF-");
   });
+
+  it("strips raw HTML tags from markdown instead of leaving them visible", async () => {
+    const md =
+      '# Hiring\n\n<div style="background-color: #1e3a8a;"><h2>Position: Senior DS</h2></div>\n\nHello';
+    expect(htmlToPlainText(md)).toContain("Position: Senior DS");
+    expect(htmlToPlainText(md)).not.toMatch(/<div/i);
+
+    const nb: Notebook = {
+      cells: [{ cell_type: "markdown", source: md }],
+      metadata: { kernelspec: { display_name: "Python 3", name: "python3" } },
+    };
+    const bytes = await notebookToPdf(nb, {
+      includeCodeCells: true,
+      includeOutputs: true,
+      title: "IPL",
+    });
+    expect(bytes.byteLength).toBeGreaterThan(100);
+    expect(String.fromCharCode(...bytes.slice(0, 5))).toBe("%PDF-");
+  });
 });
